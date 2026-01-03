@@ -51,6 +51,9 @@ const POSInterface = () => {
         name: product.name, 
         price: parseFloat(product.unit_price), 
         stock: product.quantity,
+        unit_type: product.unit_type || 'piece',
+        dosage_form: product.dosage_form || '',
+        units_per_pack: product.units_per_pack || 1,
         quantity: 1 
       }]);
     }
@@ -99,7 +102,9 @@ const POSInterface = () => {
         items: cart.map(item => ({
           product: item.id,
           quantity: item.quantity,
-          unit_price: item.price
+          unit_price: item.price,
+          unit_type: item.unit_type,
+          dosage_form: item.dosage_form
         })),
         subtotal: subtotal,
         tax: tax,
@@ -162,11 +167,16 @@ const POSInterface = () => {
                   <div className="w-full h-24 bg-neutral-100 rounded-lg mb-3 flex items-center justify-center">
                     <ShoppingCart className="w-8 h-8 text-neutral-400" />
                   </div>
-                  <h4 className="font-semibold text-neutral-800 text-sm mb-1">{product.name}</h4>
+                  <h4 className="font-semibold text-neutral-800 text-sm mb-1 line-clamp-2">{product.name}</h4>
+                  {product.dosage_form && (
+                    <p className="text-xs text-neutral-500 mb-1">{product.dosage_form}</p>
+                  )}
                   <p className="text-lg font-bold text-primary-600">
                     TSH {parseFloat(product.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
-                  <p className="text-xs text-neutral-500">Stock: {product.quantity}</p>
+                  <p className="text-xs text-neutral-500 capitalize">
+                    per {product.unit_type || 'piece'} • Stock: {product.quantity}
+                  </p>
                 </button>
               ))
             )}
@@ -218,8 +228,12 @@ const POSInterface = () => {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <h4 className="font-semibold text-sm text-neutral-800">{item.name}</h4>
+                      {item.dosage_form && (
+                        <p className="text-xs text-neutral-500">{item.dosage_form}</p>
+                      )}
                       <p className="text-sm text-neutral-600">
-                        TSH {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
+                        TSH {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                        <span className="text-xs capitalize"> per {item.unit_type}</span>
                       </p>
                     </div>
                     <button
@@ -237,7 +251,10 @@ const POSInterface = () => {
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                      <span className="w-12 text-center">
+                        <span className="font-semibold">{item.quantity}</span>
+                        <span className="text-xs capitalize block text-neutral-500">{item.unit_type}</span>
+                      </span>
                       <button
                         onClick={() => updateQuantity(item.id, 1)}
                         className="p-1 bg-white rounded hover:bg-neutral-200"

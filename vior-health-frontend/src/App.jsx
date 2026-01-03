@@ -9,6 +9,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import InventoryPage from './pages/InventoryPage';
+import POSPage from './pages/POSPage';
 import SalesPage from './pages/SalesPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -71,7 +72,19 @@ function App() {
               }
             />
 
-            {/* Sales - All authenticated users can view/create sales */}
+            {/* Point of Sale - All authenticated users can process sales */}
+            <Route
+              path="/pos"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <POSPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Sales History - All authenticated users can view sales */}
             <Route
               path="/sales"
               element={

@@ -1,51 +1,63 @@
+import { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import { AlertTriangle, Package, Calendar } from 'lucide-react';
+import { inventoryAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 
 const StockAlerts = () => {
-  const alerts = [
-    {
-      id: 1,
-      product: 'Omeprazole 20mg',
-      sku: 'MED-004',
-      currentStock: 15,
-      minStock: 30,
-      type: 'critical',
-      category: 'Gastric',
-    },
-    {
-      id: 2,
-      product: 'Amoxicillin 250mg',
-      sku: 'MED-002',
-      currentStock: 45,
-      minStock: 50,
-      type: 'low',
-      category: 'Antibiotic',
-    },
-    {
-      id: 3,
-      product: 'Metformin 500mg',
-      sku: 'MED-008',
-      currentStock: 25,
-      minStock: 40,
-      type: 'low',
-      category: 'Diabetes',
-    },
-    {
-      id: 4,
-      product: 'Aspirin 75mg',
-      sku: 'MED-009',
-      currentStock: 8,
-      minStock: 25,
-      type: 'critical',
-      category: 'Cardiovascular',
-    },
-  ];
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStockAlerts();
+  }, []);
+
+  const fetchStockAlerts = async () => {
+    try {
+      setLoading(true);
+      const response = await inventoryAPI.getProducts();
+      const products = Array.isArray(response.data) ? response.data : response.data.results || [];
+      
+      // Filter products that are low stock or critical (quantity <= reorder_level)
+      const lowStockProducts = products
+        .filter(product => product.quantity <= product.reorder_level)
+        .map(product => ({
+          id: product.id,
+          product: product.name,
+          sku: product.sku,
+          currentStock: product.quantity,
+          minStock: product.reorder_level,
+          type: product.quantity === 0 ? 'critical' : product.quantity <= product.reorder_level / 2 ? 'critical' : 'low',
+          category: product.category?.name || 'N/A',
+        }))
+        .sort((a, b) => a.currentStock - b.currentStock); // Sort by stock level (lowest first)
+      
+      setAlerts(lowStockProducts);
+    } catch (error) {
+      console.error('Error fetching stock alerts:', error);
+      toast.error('Failed to load stock alerts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card title="Stock Alerts" className="mb-6">
-      <div className="space-y-3">
-        {alerts.map((alert) => (
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+          <p className="mt-2 text-sm text-neutral-600">Loading stock alerts...</p>
+        </div>
+      ) : alerts.length === 0 ? (
+        <div className="text-center py-8 text-neutral-500">
+          <Package className="w-12 h-12 mx-auto mb-2 text-neutral-300" />
+          <p>No stock alerts at this time</p>
+          <p className="text-sm">All products have sufficient stock</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {alerts.map((alert) => (
           <div
             key={alert.id}
             className={`p-4 rounded-lg border-l-4 ${
@@ -94,7 +106,8 @@ const StockAlerts = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };

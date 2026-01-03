@@ -1,51 +1,73 @@
+import { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import Table from '../common/Table';
 import { Calendar, AlertCircle } from 'lucide-react';
+import { inventoryAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 
 const ExpiryTracker = () => {
-  const expiringProducts = [
-    {
-      id: 1,
-      name: 'Vitamin C 1000mg',
-      sku: 'MED-015',
-      batch: 'BATCH-2024-045',
-      quantity: 120,
-      expiry: '2025-02-15',
-      daysLeft: 43,
-      status: 'warning',
-    },
-    {
-      id: 2,
-      name: 'Omeprazole 20mg',
-      sku: 'MED-004',
-      batch: 'BATCH-2024-023',
-      quantity: 15,
-      expiry: '2025-02-28',
-      daysLeft: 56,
-      status: 'warning',
-    },
-    {
-      id: 3,
-      name: 'Ibuprofen 200mg',
-      sku: 'MED-010',
-      batch: 'BATCH-2024-078',
-      quantity: 85,
-      expiry: '2025-03-10',
-      daysLeft: 66,
-      status: 'info',
-    },
-    {
-      id: 4,
-      name: 'Paracetamol Syrup',
-      sku: 'MED-018',
-      batch: 'BATCH-2024-012',
-      quantity: 40,
-      expiry: '2025-01-30',
-      daysLeft: 27,
-      status: 'danger',
-    },
-  ];
+  const [expiringProducts, setExpiringProducts] = useState([]);
+  const [stats, setStats] = useState({
+    expiring30: 0,
+    expiring60: 0,
+    expiring90: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchExpiringProducts();
+  }, []);
+
+  const calculateDaysLeft = (expiryDate) => {
+    if (!expiryDate) return null;
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const fetchExpiringProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await inventoryAPI.getProducts();
+      const products = Array.isArray(response.data) ? response.data : response.data.results || [];
+      
+      // Filter products with expiry dates and calculate days left
+      const productsWithExpiry = products
+        .filter(product => product.expiry_date)
+        .map(product => {
+          const daysLeft = calculateDaysLeft(product.expiry_date);
+          return {
+            id: product.id,
+            name: product.name,
+            sku: product.sku,
+            batch: product.batch_number || 'N/A',
+            quantity: product.quantity,
+            expiry: product.expiry_date,
+            daysLeft: daysLeft,
+            status: daysLeft < 30 ? 'danger' : daysLeft < 60 ? 'warning' : 'info',
+          };
+        })
+        .filter(product => product.daysLeft <= 90 && product.daysLeft >= 0) // Only show products expiring within 90 days
+        .sort((a, b) => a.daysLeft - b.daysLeft); // Sort by expiry date (soonest first)
+      
+      setExpiringProducts(productsWithExpiry);
+      
+      // Calculate stats
+      const expiring30 = productsWithExpiry.filter(p => p.daysLeft <= 30).length;
+      const expiring60 = productsWithExpiry.filter(p => p.daysLeft <= 60).length;
+      const expiring90 = productsWithExpiry.length;
+      
+      setStats({ expiring30, expiring60, expiring90 });
+    } catch (error) {
+      console.error('Error fetching expiring products:', error);
+      toast.error('Failed to load expiry tracker');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     {
@@ -104,7 +126,7 @@ const ExpiryTracker = () => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Expiring in 30 Days</p>
-              <p className="text-2xl font-bold text-neutral-800">5</p>
+              <p className="text-2xl font-bold text-neutral-800">{stats.expiring30}</p>
             </div>
           </div>
         </div>
@@ -115,7 +137,7 @@ const ExpiryTracker = () => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Expiring in 60 Days</p>
-              <p className="text-2xl font-bold text-neutral-800">12</p>
+              <p className="text-2xl font-bold text-neutral-800">{stats.expiring60}</p>
             </div>
           </div>
         </div>
@@ -126,7 +148,7 @@ const ExpiryTracker = () => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Expiring in 90 Days</p>
-              <p className="text-2xl font-bold text-neutral-800">28</p>
+              <p className="text-2xl font-bold text-neutral-800">{stats.expiring90}</p>
             </div>
           </div>
         </div>
@@ -134,7 +156,20 @@ const ExpiryTracker = () => {
 
       {/* Expiring Products Table */}
       <Card title="Products Nearing Expiry">
-        <Table columns={columns} data={expiringProducts} />
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="mt-2 text-neutral-600">Loading expiring products...</p>
+          </div>
+        ) : expiringProducts.length === 0 ? (
+          <div className="text-center py-12 text-neutral-500">
+            <Calendar className="w-12 h-12 mx-auto mb-2 text-neutral-300" />
+            <p>No products expiring soon</p>
+            <p className="text-sm">All products are within safe expiry dates</p>
+          </div>
+        ) : (
+          <Table columns={columns} data={expiringProducts} />
+        )}
       </Card>
     </div>
   );

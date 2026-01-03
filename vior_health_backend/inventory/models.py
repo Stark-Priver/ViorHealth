@@ -29,6 +29,21 @@ class Supplier(models.Model):
         return self.name
 
 class Product(models.Model):
+    UNIT_CHOICES = (
+        ('tablet', 'Tablet'),
+        ('capsule', 'Capsule'),
+        ('bottle', 'Bottle'),
+        ('box', 'Box'),
+        ('sachet', 'Sachet'),
+        ('vial', 'Vial'),
+        ('tube', 'Tube'),
+        ('strip', 'Strip'),
+        ('piece', 'Piece'),
+        ('ml', 'Milliliter'),
+        ('mg', 'Milligram'),
+        ('unit', 'Unit'),
+    )
+    
     name = models.CharField(max_length=200)
     generic_name = models.CharField(max_length=200, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
@@ -36,9 +51,15 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
     barcode = models.CharField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Unit and dosage fields
+    unit_type = models.CharField(max_length=20, choices=UNIT_CHOICES, default='piece')
+    dosage_form = models.CharField(max_length=100, blank=True, help_text='e.g., 500mg, 10ml, etc.')
+    units_per_pack = models.IntegerField(default=1, help_text='Number of units in one pack/box')
+    
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, help_text='Price per unit')
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=0, help_text='Total quantity in stock')
     reorder_level = models.IntegerField(default=10)
     expiry_date = models.DateField(null=True, blank=True)
     batch_number = models.CharField(max_length=50, blank=True)

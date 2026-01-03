@@ -8,11 +8,27 @@ import { toast } from 'react-toastify';
 
 const InventoryPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const inventoryListRef = useRef();
 
   const handleAddItem = () => {
     setShowAddModal(false);
+    // Refresh the inventory list
+    if (inventoryListRef.current) {
+      inventoryListRef.current.fetchProducts();
+    }
+  };
+
+  const handleEditItem = (product) => {
+    setEditingProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateItem = () => {
+    setShowEditModal(false);
+    setEditingProduct(null);
     // Refresh the inventory list
     if (inventoryListRef.current) {
       inventoryListRef.current.fetchProducts();
@@ -58,7 +74,7 @@ const InventoryPage = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'all' && <InventoryList ref={inventoryListRef} onAddItem={() => setShowAddModal(true)} />}
+      {activeTab === 'all' && <InventoryList ref={inventoryListRef} onAddItem={() => setShowAddModal(true)} onEditItem={handleEditItem} />}
       {activeTab === 'alerts' && <StockAlerts />}
       {activeTab === 'expiry' && <ExpiryTracker />}
 
@@ -72,6 +88,26 @@ const InventoryPage = () => {
         <InventoryForm
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddItem}
+        />
+      </Modal>
+
+      {/* Edit Item Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingProduct(null);
+        }}
+        title="Edit Product"
+        size="lg"
+      >
+        <InventoryForm
+          editData={editingProduct}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingProduct(null);
+          }}
+          onSubmit={handleUpdateItem}
         />
       </Modal>
     </div>

@@ -31,7 +31,13 @@ const Sidebar = () => {
     },
     { 
       icon: ShoppingCart, 
-      label: 'Sales & POS', 
+      label: 'Point of Sale', 
+      path: '/pos',
+      roles: ['admin', 'manager', 'pharmacist', 'cashier']
+    },
+    { 
+      icon: TrendingUp, 
+      label: 'Sales', 
       path: '/sales',
       roles: ['admin', 'manager', 'pharmacist', 'cashier']
     },
@@ -48,7 +54,7 @@ const Sidebar = () => {
       roles: ['admin', 'manager']
     },
     { 
-      icon: TrendingUp, 
+      icon: FileText, 
       label: 'Reports', 
       path: '/reports',
       roles: ['admin', 'manager']

@@ -3,14 +3,16 @@ import Card from '../common/Card';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
-import { Plus, Search, Filter, Download, Package, AlertCircle } from 'lucide-react';
+import { Plus, Search, Filter, Download, Package, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { inventoryAPI } from '../../services/api';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 
-const InventoryList = forwardRef(({ onAddItem }, ref) => {
+const InventoryList = forwardRef(({ onAddItem, onEditItem }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { hasRole } = useAuth();
   const [stats, setStats] = useState({
     total: 0,
     inStock: 0,
@@ -46,6 +48,19 @@ const InventoryList = forwardRef(({ onAddItem }, ref) => {
       toast.error('Failed to load products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+      await inventoryAPI.deleteProduct(productId);
+      toast.success('Product deleted successfully');
+      fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
     }
   };
 
@@ -114,7 +129,9 @@ const InventoryList = forwardRef(({ onAddItem }, ref) => {
       render: (row) => (
         <div>
           <p className="font-semibold text-neutral-800">{row.name}</p>
-          <p className="text-xs text-neutral-500">SKU: {row.sku}</p>
+          <p className="text-xs text-neutral-500">
+            SKU: {row.sku} {row.dosage_form && `• ${row.dosage_form}`}
+          </p>
         </div>
       ),
     },
@@ -124,11 +141,23 @@ const InventoryList = forwardRef(({ onAddItem }, ref) => {
       render: (row) => row.category?.name || 'N/A',
     },
     {
+      header: 'Unit Type',
+      accessor: 'unit_type',
+      render: (row) => (
+        <div>
+          <p className="font-medium capitalize">{row.unit_type || 'piece'}</p>
+          {row.units_per_pack > 1 && (
+            <p className="text-xs text-neutral-500">{row.units_per_pack} per pack</p>
+          )}
+        </div>
+      ),
+    },
+    {
       header: 'Quantity',
       accessor: 'quantity',
       render: (row) => (
         <div>
-          <p className="font-semibold">{row.quantity}</p>
+          <p className="font-semibold">{row.quantity} {row.unit_type || 'pcs'}</p>
           <p className="text-xs text-neutral-500">Min: {row.reorder_level}</p>
         </div>
       ),
@@ -136,7 +165,12 @@ const InventoryList = forwardRef(({ onAddItem }, ref) => {
     {
       header: 'Price',
       accessor: 'unit_price',
-      render: (row) => `TSH ${parseFloat(row.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      render: (row) => (
+        <div>
+          <p className="font-bold">TSH {parseFloat(row.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-xs text-neutral-500">per {row.unit_type || 'unit'}</p>
+        </div>
+      ),
     },
     {
       header: 'Expiry Date',
@@ -163,6 +197,30 @@ const InventoryList = forwardRef(({ onAddItem }, ref) => {
           </Badge>
         );
       },
+    },
+    {
+      header: 'Actions',
+      accessor: 'id',
+      render: (row) => (
+        hasRole(['admin', 'manager']) && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => onEditItem(row)}
+              className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              title="Edit Product"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+              title="Delete Product"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      ),
     },
   ];
 

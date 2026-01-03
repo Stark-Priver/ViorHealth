@@ -18,6 +18,9 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
     barcode: editData?.barcode || '',
     category: editData?.category?.id || '',
     supplier: editData?.supplier?.id || '',
+    unit_type: editData?.unit_type || 'piece',
+    dosage_form: editData?.dosage_form || '',
+    units_per_pack: editData?.units_per_pack || 1,
     quantity: editData?.quantity || '',
     reorder_level: editData?.reorder_level || '',
     unit_price: editData?.unit_price || '',
@@ -168,6 +171,65 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Unit Type <span className="text-danger-600">*</span>
+          </label>
+          <select
+            name="unit_type"
+            value={formData.unit_type}
+            onChange={handleChange}
+            required
+            className="input-field"
+          >
+            <option value="tablet">Tablet</option>
+            <option value="capsule">Capsule</option>
+            <option value="bottle">Bottle</option>
+            <option value="box">Box</option>
+            <option value="sachet">Sachet</option>
+            <option value="vial">Vial</option>
+            <option value="tube">Tube</option>
+            <option value="strip">Strip</option>
+            <option value="piece">Piece</option>
+            <option value="ml">Milliliter (ml)</option>
+            <option value="mg">Milligram (mg)</option>
+            <option value="unit">Unit</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Dosage Form
+          </label>
+          <input
+            type="text"
+            name="dosage_form"
+            value={formData.dosage_form}
+            onChange={handleChange}
+            className="input-field"
+            placeholder="e.g., 500mg, 10ml, 250mg"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Units Per Pack <span className="text-danger-600">*</span>
+          </label>
+          <input
+            type="number"
+            name="units_per_pack"
+            value={formData.units_per_pack}
+            onChange={handleChange}
+            required
+            min="1"
+            className="input-field"
+            placeholder="e.g., 10, 20, 100"
+          />
+          <p className="text-xs text-neutral-500 mt-1">
+            How many {formData.unit_type}s in one pack/box
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
             Category <span className="text-danger-600">*</span>
           </label>
           <div className="flex gap-2">
@@ -258,7 +320,7 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-2">
-            Quantity <span className="text-danger-600">*</span>
+            Total Quantity in Stock <span className="text-danger-600">*</span>
           </label>
           <input
             type="number"
@@ -270,6 +332,9 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
             className="input-field"
             placeholder="0"
           />
+          <p className="text-xs text-neutral-500 mt-1">
+            Total {formData.unit_type}s available
+          </p>
         </div>
 
         <div>
@@ -303,6 +368,9 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
             className="input-field"
             placeholder="0.00"
           />
+          <p className="text-xs text-neutral-500 mt-1">
+            Price per {formData.unit_type}
+          </p>
         </div>
 
         <div>

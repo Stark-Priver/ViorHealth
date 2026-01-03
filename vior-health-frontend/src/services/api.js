@@ -61,6 +61,13 @@ export const authAPI = {
   register: (userData) => api.post('/accounts/register/', userData),
   getCurrentUser: () => api.get('/accounts/users/me/'),
   changePassword: (passwords) => api.post('/accounts/users/change_password/', passwords),
+  
+  // User Management (Admin)
+  getAllUsers: () => api.get('/accounts/users/'),
+  getUser: (id) => api.get(`/accounts/users/${id}/`),
+  createUser: (userData) => api.post('/accounts/users/', userData),
+  updateUser: (id, userData) => api.put(`/accounts/users/${id}/`, userData),
+  deleteUser: (id) => api.delete(`/accounts/users/${id}/`),
 };
 
 // Inventory API

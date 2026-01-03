@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage';
 import InventoryPage from './pages/InventoryPage';
 import SalesPage from './pages/SalesPage';
 import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -87,6 +88,18 @@ function App() {
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <MainLayout>
                     <ReportsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Settings - Admin and Manager only */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <MainLayout>
+                    <SettingsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

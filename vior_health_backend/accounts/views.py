@@ -1,16 +1,30 @@
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from django.contrib.auth import update_session_auth_hash
 from .models import User
 from .serializers import UserSerializer, UserRegistrationSerializer, ChangePasswordSerializer
+
+
+class IsAdminOrManager(BasePermission):
+    """
+    Custom permission to only allow admins and managers to access.
+    """
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.role in ['admin', 'manager']
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        # Only admins and managers can list, create, update, delete users
+        if self.action in ['list', 'create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminOrManager()]
+        return super().get_permissions()
 
     @action(detail=False, methods=['get'])
     def me(self, request):

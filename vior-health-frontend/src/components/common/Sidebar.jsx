@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/logo.png';
 
 const Sidebar = () => {
   const { user, hasRole } = useAuth();
@@ -76,21 +77,13 @@ const Sidebar = () => {
   const visibleMenuItems = menuItems.filter(item => hasRole(item.roles));
 
   return (
-    <aside className="w-64 bg-white border-r border-neutral-200 min-h-screen sticky top-0">
-      <div className="p-6">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <Pill className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="font-bold text-neutral-800">VIOR PMS</h2>
-              <p className="text-xs text-neutral-500">Pharmacy System</p>
-            </div>
-          </div>
+    <aside className="w-64 bg-white border-r border-neutral-200 h-screen fixed left-0 top-0 overflow-hidden">
+      <div className="p-6 h-full flex flex-col">
+        <div className="mb-8 flex-shrink-0">
+          <img src={logo} alt="VIOR Health" className="h-16 w-auto mb-2" />
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 flex-1 overflow-y-auto">
           {visibleMenuItems.map((item) => (
             <NavLink
               key={item.path}
@@ -107,7 +100,7 @@ const Sidebar = () => {
 
         {/* User Role Indicator */}
         {user && (
-          <div className="mt-8 p-3 bg-primary-50 rounded-lg">
+          <div className="mt-4 p-3 bg-primary-50 rounded-lg flex-shrink-0">
             <p className="text-xs text-neutral-600 mb-1">Current Role</p>
             <p className="text-sm font-semibold text-primary-700 capitalize">{user.role}</p>
           </div>

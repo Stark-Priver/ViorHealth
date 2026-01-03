@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -30,7 +31,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between">
         {/* Logo and Search */}
         <div className="flex items-center gap-6 flex-1">
-          <h1 className="text-2xl font-bold text-primary-600">VIOR Health</h1>
+          <img src={logo} alt="VIOR Health" className="h-12 w-auto" />
           
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />

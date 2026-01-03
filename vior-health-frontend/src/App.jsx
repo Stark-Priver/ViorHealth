@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
@@ -19,12 +19,18 @@ const MainLayout = ({ children }) => {
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 ml-64">
           {children}
         </main>
       </div>
     </div>
   );
+};
+
+// Home route component that redirects based on auth status
+const Home = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 };
 
 function App() {
@@ -34,8 +40,9 @@ function App() {
         <div className="font-poppins">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/landing" element={<LandingPage />} />
 
             {/* Protected Routes - All authenticated users */}
             <Route

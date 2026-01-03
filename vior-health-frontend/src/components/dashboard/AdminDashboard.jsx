@@ -7,18 +7,23 @@ import {
   UserCheck,
   ClipboardList,
   AlertTriangle,
-  Settings
+  Settings,
+  Pill,
+  Clock,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import Loader from '../common/Loader';
-import { analyticsAPI } from '../../services/api';
+import { analyticsAPI, prescriptionsAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
+  const [pendingPrescriptions, setPendingPrescriptions] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -26,13 +31,15 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, activitiesRes] = await Promise.all([
+      const [statsRes, activitiesRes, prescriptionsRes] = await Promise.all([
         analyticsAPI.getDashboardStats(),
         analyticsAPI.getRecentActivities(10),
+        prescriptionsAPI.getPendingPrescriptions(),
       ]);
 
       setStats(statsRes.data);
       setRecentActivities(activitiesRes.data);
+      setPendingPrescriptions(prescriptionsRes.data.results || prescriptionsRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -104,6 +111,31 @@ const AdminDashboard = () => {
     return `${Math.floor(diffInMinutes / 1440)} days ago`;
   };
 
+  const handleDispensePrescription = async (prescriptionId) => {
+    try {
+      await prescriptionsAPI.dispensePrescription(prescriptionId);
+      toast.success('Prescription dispensed successfully');
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error dispensing prescription:', error);
+      toast.error('Failed to dispense prescription');
+    }
+  };
+
+  const handleCancelPrescription = async (prescriptionId) => {
+    if (!window.confirm('Are you sure you want to cancel this prescription?')) {
+      return;
+    }
+    try {
+      await prescriptionsAPI.cancelPrescription(prescriptionId);
+      toast.success('Prescription cancelled');
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error cancelling prescription:', error);
+      toast.error('Failed to cancel prescription');
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -117,6 +149,55 @@ const AdminDashboard = () => {
           <StatCard key={index} {...stat} />
         ))}
       </div>
+
+      {/* Pending Prescriptions */}
+      <Card title="Pending Prescriptions" className="mb-8">
+        <div className="space-y-3">
+          {pendingPrescriptions.length === 0 ? (
+            <p className="text-center text-neutral-500 py-4">No pending prescriptions</p>
+          ) : (
+            pendingPrescriptions.slice(0, 5).map((prescription) => (
+              <div key={prescription.id} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="p-2 bg-warning-100 rounded-lg">
+                    <Pill className="w-5 h-5 text-warning-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-neutral-800">
+                      {prescription.patient_name || 'Unknown Patient'}
+                    </p>
+                    <p className="text-sm text-neutral-600">
+                      Doctor: {prescription.doctor_name || 'N/A'}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Clock className="w-3 h-3 text-neutral-400" />
+                      <span className="text-xs text-neutral-500">
+                        {formatTime(prescription.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDispensePrescription(prescription.id)}
+                    className="p-2 bg-success-100 text-success-600 rounded-lg hover:bg-success-200 transition-colors"
+                    title="Dispense"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleCancelPrescription(prescription.id)}
+                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                    title="Cancel"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
 
       {/* Quick Actions */}
       <Card title="Quick Actions" className="mb-8">

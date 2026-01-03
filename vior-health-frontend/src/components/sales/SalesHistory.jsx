@@ -1,112 +1,114 @@
+import { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import { Eye, Download, Search, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { salesAPI, analyticsAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 
 const SalesHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [salesData, setSalesData] = useState([]);
+  const [stats, setStats] = useState({
+    today: 0,
+    week: 0,
+    month: 0,
+    average: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const salesData = [
-    {
-      id: 1,
-      invoiceNo: 'INV-2024-0847',
-      customer: 'John Doe',
-      date: '2024-01-03',
-      time: '10:30 AM',
-      items: 5,
-      amount: 125.50,
-      paymentMethod: 'Cash',
-      status: 'Completed',
-    },
-    {
-      id: 2,
-      invoiceNo: 'INV-2024-0846',
-      customer: 'Jane Smith',
-      date: '2024-01-03',
-      time: '09:15 AM',
-      items: 3,
-      amount: 87.25,
-      paymentMethod: 'Card',
-      status: 'Completed',
-    },
-    {
-      id: 3,
-      invoiceNo: 'INV-2024-0845',
-      customer: 'Michael Brown',
-      date: '2024-01-02',
-      time: '04:45 PM',
-      items: 8,
-      amount: 234.75,
-      paymentMethod: 'Card',
-      status: 'Completed',
-    },
-    {
-      id: 4,
-      invoiceNo: 'INV-2024-0844',
-      customer: 'Sarah Wilson',
-      date: '2024-01-02',
-      time: '02:20 PM',
-      items: 2,
-      amount: 45.50,
-      paymentMethod: 'Cash',
-      status: 'Completed',
-    },
-    {
-      id: 5,
-      invoiceNo: 'INV-2024-0843',
-      customer: 'David Lee',
-      date: '2024-01-02',
-      time: '11:30 AM',
-      items: 4,
-      amount: 156.00,
-      paymentMethod: 'Insurance',
-      status: 'Pending',
-    },
-  ];
+  useEffect(() => {
+    fetchSalesData();
+    fetchStats();
+  }, []);
+
+  const fetchSalesData = async () => {
+    try {
+      setLoading(true);
+      const response = await salesAPI.getSales();
+      const data = Array.isArray(response.data) ? response.data : response.data.results || [];
+      setSalesData(data);
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+      toast.error('Failed to load sales history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await analyticsAPI.getDashboardStats();
+      const data = response.data;
+      
+      setStats({
+        today: data.today_revenue || 0,
+        week: data.week_revenue || 0,
+        month: data.month_revenue || 0,
+        average: data.average_transaction || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return { date: 'N/A', time: 'N/A' };
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    };
+  };
 
   const columns = [
     {
       header: 'Invoice No.',
-      accessor: 'invoiceNo',
+      accessor: 'invoice_number',
       render: (row) => (
-        <span className="font-semibold text-primary-600">{row.invoiceNo}</span>
+        <span className="font-semibold text-primary-600">{row.invoice_number || `INV-${row.id}`}</span>
       ),
     },
     {
       header: 'Customer',
       accessor: 'customer',
+      render: (row) => row.customer?.name || row.customer_name || 'Walk-in Customer',
     },
     {
       header: 'Date & Time',
-      accessor: 'date',
-      render: (row) => (
-        <div>
-          <p className="text-neutral-800">{row.date}</p>
-          <p className="text-xs text-neutral-500">{row.time}</p>
-        </div>
-      ),
+      accessor: 'created_at',
+      render: (row) => {
+        const { date, time } = formatDateTime(row.created_at);
+        return (
+          <div>
+            <p className="text-neutral-800">{date}</p>
+            <p className="text-xs text-neutral-500">{time}</p>
+          </div>
+        );
+      },
     },
     {
       header: 'Items',
       accessor: 'items',
       render: (row) => (
-        <span className="font-semibold">{row.items}</span>
+        <span className="font-semibold">{row.items?.length || row.total_items || 0}</span>
       ),
     },
     {
       header: 'Amount',
-      accessor: 'amount',
+      accessor: 'total_amount',
       render: (row) => (
-        <span className="font-bold text-neutral-800">${row.amount.toFixed(2)}</span>
+        <span className="font-bold text-neutral-800">
+          TSH {parseFloat(row.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
       ),
     },
     {
       header: 'Payment',
-      accessor: 'paymentMethod',
+      accessor: 'payment_method',
       render: (row) => (
-        <Badge variant="info" size="sm">{row.paymentMethod}</Badge>
+        <Badge variant="info" size="sm">{row.payment_method || 'Cash'}</Badge>
       ),
     },
     {
@@ -114,9 +116,9 @@ const SalesHistory = () => {
       accessor: 'status',
       render: (row) => (
         <Badge
-          variant={row.status === 'Completed' ? 'success' : 'warning'}
+          variant={row.status === 'completed' || row.status === 'Completed' ? 'success' : 'warning'}
         >
-          {row.status}
+          {row.status || 'Completed'}
         </Badge>
       ),
     },
@@ -130,6 +132,16 @@ const SalesHistory = () => {
       ),
     },
   ];
+
+  const filteredSales = salesData.filter(sale => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (sale.invoice_number?.toLowerCase().includes(searchLower)) ||
+      (sale.customer?.name?.toLowerCase().includes(searchLower)) ||
+      (sale.customer_name?.toLowerCase().includes(searchLower)) ||
+      (sale.id?.toString().includes(searchLower))
+    );
+  });
 
   return (
     <div>
@@ -164,28 +176,44 @@ const SalesHistory = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">Today's Sales</p>
-          <p className="text-2xl font-bold text-neutral-800">$2,145</p>
-          <p className="text-xs text-success-600 mt-1">↑ 12.5%</p>
+          <p className="text-2xl font-bold text-neutral-800">
+            TSH {parseFloat(stats.today).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">This Week</p>
-          <p className="text-2xl font-bold text-neutral-800">$15,342</p>
-          <p className="text-xs text-success-600 mt-1">↑ 8.3%</p>
+          <p className="text-2xl font-bold text-neutral-800">
+            TSH {parseFloat(stats.week).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">This Month</p>
-          <p className="text-2xl font-bold text-neutral-800">$65,789</p>
-          <p className="text-xs text-success-600 mt-1">↑ 15.7%</p>
+          <p className="text-2xl font-bold text-neutral-800">
+            TSH {parseFloat(stats.month).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">Avg. Transaction</p>
-          <p className="text-2xl font-bold text-neutral-800">$129.50</p>
+          <p className="text-2xl font-bold text-neutral-800">
+            TSH {parseFloat(stats.average).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
           <p className="text-xs text-neutral-500 mt-1">Last 30 days</p>
         </div>
       </div>
 
       <Card>
-        <Table columns={columns} data={salesData} />
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="mt-2 text-neutral-600">Loading sales...</p>
+          </div>
+        ) : filteredSales.length === 0 ? (
+          <div className="text-center py-12 text-neutral-500">
+            <p>No sales found</p>
+          </div>
+        ) : (
+          <Table columns={columns} data={filteredSales} />
+        )}
       </Card>
     </div>
   );

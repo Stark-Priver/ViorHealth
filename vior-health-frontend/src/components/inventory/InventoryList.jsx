@@ -1,12 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Card from '../common/Card';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import { Plus, Search, Filter, Download, Package, AlertCircle } from 'lucide-react';
+import { inventoryAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 
-const InventoryList = ({ onAddItem }) => {
+const InventoryList = forwardRef(({ onAddItem }, ref) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    inStock: 0,
+    lowStock: 0,
+    outOfStock: 0
+  });
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Expose fetchProducts to parent component
+  useImperativeHandle(ref, () => ({
+    fetchProducts
+  }));
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await inventoryAPI.getProducts();
+      const productsList = Array.isArray(response.data) ? response.data : response.data.results || [];
+      setProducts(productsList);
+      
+      // Calculate stats
+      const total = productsList.length;
+      const inStock = productsList.filter(p => p.quantity > p.reorder_level).length;
+      const lowStock = productsList.filter(p => p.quantity > 0 && p.quantity <= p.reorder_level).length;
+      const outOfStock = productsList.filter(p => p.quantity === 0).length;
+      
+      setStats({ total, inStock, lowStock, outOfStock });
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const inventoryData = [
     {
@@ -80,6 +121,7 @@ const InventoryList = ({ onAddItem }) => {
     {
       header: 'Category',
       accessor: 'category',
+      render: (row) => row.category?.name || 'N/A',
     },
     {
       header: 'Quantity',
@@ -87,33 +129,40 @@ const InventoryList = ({ onAddItem }) => {
       render: (row) => (
         <div>
           <p className="font-semibold">{row.quantity}</p>
-          <p className="text-xs text-neutral-500">Min: {row.minStock}</p>
+          <p className="text-xs text-neutral-500">Min: {row.reorder_level}</p>
         </div>
       ),
     },
     {
       header: 'Price',
-      accessor: 'price',
-      render: (row) => `$${row.price.toFixed(2)}`,
+      accessor: 'unit_price',
+      render: (row) => `TSH ${parseFloat(row.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     {
       header: 'Expiry Date',
-      accessor: 'expiry',
+      accessor: 'expiry_date',
+      render: (row) => row.expiry_date || 'N/A',
     },
     {
       header: 'Status',
-      accessor: 'status',
-      render: (row) => (
-        <Badge
-          variant={
-            row.status === 'In Stock' ? 'success' :
-            row.status === 'Low Stock' ? 'warning' :
-            'danger'
-          }
-        >
-          {row.status}
-        </Badge>
-      ),
+      accessor: 'quantity',
+      render: (row) => {
+        const status = row.quantity === 0 ? 'Out of Stock' 
+          : row.quantity <= row.reorder_level ? 'Low Stock' 
+          : 'In Stock';
+        
+        return (
+          <Badge
+            variant={
+              status === 'In Stock' ? 'success' :
+              status === 'Low Stock' ? 'warning' :
+              'danger'
+            }
+          >
+            {status}
+          </Badge>
+        );
+      },
     },
   ];
 
@@ -161,7 +210,7 @@ const InventoryList = ({ onAddItem }) => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Total Products</p>
-              <p className="text-xl font-bold text-neutral-800">1,234</p>
+              <p className="text-xl font-bold text-neutral-800">{stats.total}</p>
             </div>
           </div>
         </div>
@@ -172,7 +221,7 @@ const InventoryList = ({ onAddItem }) => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">In Stock</p>
-              <p className="text-xl font-bold text-neutral-800">1,156</p>
+              <p className="text-xl font-bold text-neutral-800">{stats.inStock}</p>
             </div>
           </div>
         </div>
@@ -183,7 +232,7 @@ const InventoryList = ({ onAddItem }) => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Low Stock</p>
-              <p className="text-xl font-bold text-neutral-800">45</p>
+              <p className="text-xl font-bold text-neutral-800">{stats.lowStock}</p>
             </div>
           </div>
         </div>
@@ -194,7 +243,7 @@ const InventoryList = ({ onAddItem }) => {
             </div>
             <div>
               <p className="text-xs text-neutral-600">Out of Stock</p>
-              <p className="text-xl font-bold text-neutral-800">33</p>
+              <p className="text-xl font-bold text-neutral-800">{stats.outOfStock}</p>
             </div>
           </div>
         </div>
@@ -202,10 +251,29 @@ const InventoryList = ({ onAddItem }) => {
 
       {/* Inventory Table */}
       <Card>
-        <Table columns={columns} data={inventoryData} />
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="mt-2 text-neutral-600">Loading products...</p>
+          </div>
+        ) : (
+          <Table 
+            columns={columns} 
+            data={searchTerm 
+              ? products.filter(p => 
+                  p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  p.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+              : products
+            } 
+          />
+        )}
       </Card>
     </div>
   );
-};
+});
+
+InventoryList.displayName = 'InventoryList';
 
 export default InventoryList;

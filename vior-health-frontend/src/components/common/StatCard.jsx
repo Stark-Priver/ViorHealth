@@ -5,7 +5,7 @@ const StatCard = ({ icon: Icon, title, value, change, changeType, iconColor = 'b
   return (
     <div className="stat-card">
       <div className="flex items-start justify-between">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-neutral-600 mb-1">{title}</p>
           <h3 className="text-3xl font-bold text-neutral-800 mb-2">{value}</h3>
           {change && (
@@ -26,7 +26,7 @@ const StatCard = ({ icon: Icon, title, value, change, changeType, iconColor = 'b
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-xl ${iconColor || 'bg-primary-100'}`}>
+        <div className={`p-3 rounded-xl flex-shrink-0 ${iconColor || 'bg-primary-100'}`}>
           <Icon className={`w-6 h-6 ${iconColor ? 'text-white' : 'text-primary-600'}`} />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import InventoryList from '../components/inventory/InventoryList';
 import InventoryForm from '../components/inventory/InventoryForm';
 import StockAlerts from '../components/inventory/StockAlerts';
@@ -9,11 +9,14 @@ import { toast } from 'react-toastify';
 const InventoryPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const inventoryListRef = useRef();
 
-  const handleAddItem = (data) => {
-    console.log('Adding item:', data);
-    toast.success('Item added successfully!');
+  const handleAddItem = () => {
     setShowAddModal(false);
+    // Refresh the inventory list
+    if (inventoryListRef.current) {
+      inventoryListRef.current.fetchProducts();
+    }
   };
 
   return (
@@ -55,7 +58,7 @@ const InventoryPage = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'all' && <InventoryList onAddItem={() => setShowAddModal(true)} />}
+      {activeTab === 'all' && <InventoryList ref={inventoryListRef} onAddItem={() => setShowAddModal(true)} />}
       {activeTab === 'alerts' && <StockAlerts />}
       {activeTab === 'expiry' && <ExpiryTracker />}
 

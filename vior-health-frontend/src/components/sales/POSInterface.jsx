@@ -1,27 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { Plus, Minus, Trash2, ShoppingCart, Search, DollarSign } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { inventoryAPI, salesAPI } from '../../services/api';
 
 const POSInterface = () => {
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [processing, setProcessing] = useState(false);
 
-  const products = [
-    { id: 1, name: 'Paracetamol 500mg', price: 2.50, stock: 500 },
-    { id: 2, name: 'Ibuprofen 400mg', price: 3.75, stock: 320 },
-    { id: 3, name: 'Amoxicillin 250mg', price: 5.00, stock: 45 },
-    { id: 4, name: 'Cetirizine 10mg', price: 2.25, stock: 180 },
-    { id: 5, name: 'Omeprazole 20mg', price: 4.50, stock: 15 },
-    { id: 6, name: 'Metformin 500mg', price: 3.25, stock: 95 },
-  ];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await inventoryAPI.getProducts();
+      const data = Array.isArray(response.data) ? response.data : response.data.results || [];
+      // Only show active products with stock
+      setProducts(data.filter(p => p.is_active && p.quantity > 0));
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addToCart = (product) => {
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
-      if (existingItem.quantity < product.stock) {
+      if (existingItem.quantity < product.quantity) {
         setCart(cart.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -31,7 +46,13 @@ const POSInterface = () => {
         toast.warning('Insufficient stock');
       }
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setCart([...cart, { 
+        id: product.id, 
+        name: product.name, 
+        price: parseFloat(product.unit_price), 
+        stock: product.quantity,
+        quantity: 1 
+      }]);
     }
   };
 
@@ -39,7 +60,7 @@ const POSInterface = () => {
     const item = cart.find(i => i.id === id);
     const product = products.find(p => p.id === id);
     
-    if (item.quantity + change > product.stock) {
+    if (item.quantity + change > product.quantity) {
       toast.warning('Insufficient stock');
       return;
     }
@@ -61,17 +82,42 @@ const POSInterface = () => {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.1; // 10% tax
+  const tax = subtotal * 0.18; // 18% VAT in Tanzania
   const total = subtotal + tax;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) {
       toast.error('Cart is empty');
       return;
     }
-    toast.success('Sale completed successfully!');
-    setCart([]);
-    setCustomerName('');
+
+    try {
+      setProcessing(true);
+      const saleData = {
+        customer_name: customerName || 'Walk-in Customer',
+        payment_method: paymentMethod,
+        items: cart.map(item => ({
+          product: item.id,
+          quantity: item.quantity,
+          unit_price: item.price
+        })),
+        subtotal: subtotal,
+        tax: tax,
+        total_amount: total
+      };
+
+      await salesAPI.createSale(saleData);
+      toast.success('Sale completed successfully!');
+      setCart([]);
+      setCustomerName('');
+      setPaymentMethod('cash');
+      fetchProducts(); // Refresh product stock
+    } catch (error) {
+      console.error('Error completing sale:', error);
+      toast.error(error.response?.data?.message || 'Failed to complete sale');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const filteredProducts = products.filter(product =>
@@ -97,20 +143,33 @@ const POSInterface = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
-            {filteredProducts.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="bg-white border-2 border-neutral-200 rounded-lg p-4 hover:border-primary-500 hover:shadow-md transition-all text-left"
-              >
-                <div className="w-full h-24 bg-neutral-100 rounded-lg mb-3 flex items-center justify-center">
-                  <ShoppingCart className="w-8 h-8 text-neutral-400" />
-                </div>
-                <h4 className="font-semibold text-neutral-800 text-sm mb-1">{product.name}</h4>
-                <p className="text-lg font-bold text-primary-600">${product.price.toFixed(2)}</p>
-                <p className="text-xs text-neutral-500">Stock: {product.stock}</p>
-              </button>
-            ))}
+            {loading ? (
+              <div className="col-span-full text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-neutral-600">Loading products...</p>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-neutral-500">
+                <p>No products available</p>
+              </div>
+            ) : (
+              filteredProducts.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => addToCart(product)}
+                  className="bg-white border-2 border-neutral-200 rounded-lg p-4 hover:border-primary-500 hover:shadow-md transition-all text-left"
+                >
+                  <div className="w-full h-24 bg-neutral-100 rounded-lg mb-3 flex items-center justify-center">
+                    <ShoppingCart className="w-8 h-8 text-neutral-400" />
+                  </div>
+                  <h4 className="font-semibold text-neutral-800 text-sm mb-1">{product.name}</h4>
+                  <p className="text-lg font-bold text-primary-600">
+                    TSH {parseFloat(product.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-neutral-500">Stock: {product.quantity}</p>
+                </button>
+              ))
+            )}
           </div>
         </Card>
       </div>
@@ -131,6 +190,22 @@ const POSInterface = () => {
             />
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Payment Method
+            </label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="input-field"
+            >
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="mobile_money">Mobile Money</option>
+              <option value="insurance">Insurance</option>
+            </select>
+          </div>
+
           <div className="space-y-3 mb-4 max-h-[300px] overflow-y-auto">
             {cart.length === 0 ? (
               <div className="text-center py-8 text-neutral-500">
@@ -143,7 +218,9 @@ const POSInterface = () => {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <h4 className="font-semibold text-sm text-neutral-800">{item.name}</h4>
-                      <p className="text-sm text-neutral-600">${item.price.toFixed(2)} each</p>
+                      <p className="text-sm text-neutral-600">
+                        TSH {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
+                      </p>
                     </div>
                     <button
                       onClick={() => removeFromCart(item.id)}
@@ -169,7 +246,7 @@ const POSInterface = () => {
                       </button>
                     </div>
                     <p className="font-bold text-neutral-800">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      TSH {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -180,15 +257,21 @@ const POSInterface = () => {
           <div className="border-t border-neutral-200 pt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-600">Subtotal:</span>
-              <span className="font-semibold text-neutral-800">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold text-neutral-800">
+                TSH {subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-neutral-600">Tax (10%):</span>
-              <span className="font-semibold text-neutral-800">${tax.toFixed(2)}</span>
+              <span className="text-neutral-600">VAT (18%):</span>
+              <span className="font-semibold text-neutral-800">
+                TSH {tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
             <div className="flex items-center justify-between text-lg border-t border-neutral-200 pt-2">
               <span className="font-bold text-neutral-800">Total:</span>
-              <span className="font-bold text-primary-600">${total.toFixed(2)}</span>
+              <span className="font-bold text-primary-600">
+                TSH {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
           </div>
 
@@ -198,9 +281,9 @@ const POSInterface = () => {
             className="mt-4"
             icon={<DollarSign className="w-5 h-5" />}
             onClick={handleCheckout}
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || processing}
           >
-            Complete Sale
+            {processing ? 'Processing...' : 'Complete Sale'}
           </Button>
         </Card>
       </div>

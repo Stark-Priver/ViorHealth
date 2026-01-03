@@ -15,6 +15,8 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_data = CategorySerializer(source='category', read_only=True)
+    supplier_data = SupplierSerializer(source='supplier', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     supplier_name = serializers.CharField(source='supplier.name', read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
@@ -24,6 +26,15 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        """Include nested category and supplier data in responses"""
+        representation = super().to_representation(instance)
+        if instance.category:
+            representation['category'] = CategorySerializer(instance.category).data
+        if instance.supplier:
+            representation['supplier'] = SupplierSerializer(instance.supplier).data
+        return representation
 
 
 class StockMovementSerializer(serializers.ModelSerializer):

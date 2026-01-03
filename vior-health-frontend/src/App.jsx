@@ -12,6 +12,8 @@ import InventoryPage from './pages/InventoryPage';
 import SalesPage from './pages/SalesPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
+import SuppliersPage from './pages/SuppliersPage';
+import PrescriptionsPage from './pages/PrescriptionsPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -100,6 +102,30 @@ function App() {
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <MainLayout>
                     <SettingsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Suppliers - Admin and Manager only */}
+            <Route
+              path="/suppliers"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <MainLayout>
+                    <SuppliersPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Prescriptions - Admin, Manager, Pharmacist */}
+            <Route
+              path="/prescriptions"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager', 'pharmacist']}>
+                  <MainLayout>
+                    <PrescriptionsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

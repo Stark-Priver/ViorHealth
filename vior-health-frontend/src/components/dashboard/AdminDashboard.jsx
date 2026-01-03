@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import StatCard from '../common/StatCard';
 import { 
   Users, 
@@ -11,55 +12,98 @@ import {
 } from 'lucide-react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
+import Loader from '../common/Loader';
+import { analyticsAPI, inventoryAPI, salesAPI } from '../../services/api';
+import { toast } from 'react-toastify';
 
 const AdminDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [statsRes, activitiesRes] = await Promise.all([
+        analyticsAPI.getDashboardStats(),
+        analyticsAPI.getRecentActivities(10),
+      ]);
+
+      setStats(statsRes.data);
+      setRecentActivities(activitiesRes.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <Loader />;
+  }
+
   const adminStats = [
-    {
-      icon: Users,
-      title: 'Total Users',
-      value: '47',
-      change: '+5',
-      changeType: 'increase',
-      iconColor: 'bg-primary-600',
-    },
     {
       icon: Package,
       title: 'Total Products',
-      value: '1,234',
-      change: '+45',
-      changeType: 'increase',
+      value: stats?.total_products || '0',
+      change: `${stats?.low_stock_products || 0} low stock`,
+      changeType: 'warning',
       iconColor: 'bg-success-600',
     },
     {
       icon: DollarSign,
-      title: 'Monthly Revenue',
-      value: '$124,592',
-      change: '+12.5%',
+      title: 'Total Revenue',
+      value: `TSH ${(stats?.total_revenue || 0).toLocaleString()}`,
+      change: `Today: TSH ${(stats?.today_revenue || 0).toLocaleString()}`,
       changeType: 'increase',
       iconColor: 'bg-warning-500',
     },
     {
       icon: TrendingUp,
-      title: 'System Uptime',
-      value: '99.9%',
-      change: 'Stable',
+      title: "Today's Sales",
+      value: `${stats?.today_transactions || 0}`,
+      change: 'Transactions',
       changeType: 'increase',
+      iconColor: 'bg-primary-600',
+    },
+    {
+      icon: ClipboardList,
+      title: 'Pending Prescriptions',
+      value: `${stats?.pending_prescriptions || 0}`,
+      change: 'Awaiting',
+      changeType: stats?.pending_prescriptions > 0 ? 'warning' : 'increase',
       iconColor: 'bg-danger-600',
     },
   ];
 
-  const recentActivities = [
-    { user: 'John Doe', action: 'Added new product', time: '5 min ago', type: 'success' },
-    { user: 'Jane Smith', action: 'Updated inventory', time: '15 min ago', type: 'info' },
-    { user: 'System', action: 'Backup completed', time: '1 hour ago', type: 'success' },
-    { user: 'Mike Wilson', action: 'Generated report', time: '2 hours ago', type: 'info' },
-  ];
+  const getActivityBadgeVariant = (type) => {
+    switch (type) {
+      case 'sale':
+        return 'success';
+      case 'stock_movement':
+        return 'warning';
+      case 'prescription':
+        return 'info';
+      default:
+        return 'neutral';
+    }
+  };
 
-  const systemAlerts = [
-    { title: 'Database backup scheduled', severity: 'info', time: 'Today at 11:00 PM' },
-    { title: 'Low disk space warning', severity: 'warning', time: '2 hours ago' },
-    { title: 'User login from new device', severity: 'info', time: '3 hours ago' },
-  ];
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / 60000);
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
 
   return (
     <div>
@@ -97,49 +141,29 @@ const AdminDashboard = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
-        <Card title="Recent User Activities">
-          <div className="space-y-3">
-            {recentActivities.map((activity, index) => (
+      {/* Recent Activities */}
+      <Card title="Recent Activities">
+        <div className="space-y-3">
+          {recentActivities.length === 0 ? (
+            <p className="text-center text-neutral-500 py-4">No recent activities</p>
+          ) : (
+            recentActivities.map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
                 <div>
                   <p className="font-medium text-neutral-800">{activity.user}</p>
-                  <p className="text-sm text-neutral-600">{activity.action}</p>
+                  <p className="text-sm text-neutral-600">{activity.description}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant={activity.type} size="sm">{activity.type}</Badge>
-                  <p className="text-xs text-neutral-500 mt-1">{activity.time}</p>
+                  <Badge variant={getActivityBadgeVariant(activity.type)} size="sm">
+                    {activity.type}
+                  </Badge>
+                  <p className="text-xs text-neutral-500 mt-1">{formatTime(activity.created_at)}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* System Alerts */}
-        <Card title="System Alerts">
-          <div className="space-y-3">
-            {systemAlerts.map((alert, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-lg border-l-4 ${
-                  alert.severity === 'warning'
-                    ? 'bg-warning-50 border-warning-600'
-                    : 'bg-primary-50 border-primary-600'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-semibold text-neutral-800 text-sm mb-1">{alert.title}</h4>
-                    <p className="text-xs text-neutral-600">{alert.time}</p>
-                  </div>
-                  <Badge variant={alert.severity} size="sm">{alert.severity}</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+            ))
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

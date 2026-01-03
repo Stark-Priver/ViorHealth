@@ -1,26 +1,47 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import Button from '../components/common/Button';
 import { toast } from 'react-toastify';
+import { authAPI } from '../services/api';
 import logo from '../assets/logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate login
-    if (formData.email && formData.password) {
-      toast.success('Login successful!');
-      navigate('/');
-    } else {
+    
+    if (!formData.username || !formData.password) {
       toast.error('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await authAPI.login(formData);
+      const { access, refresh } = response.data;
+      
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+      
+      // Get user data
+      const userResponse = await authAPI.getCurrentUser();
+      localStorage.setItem('user', JSON.stringify(userResponse.data));
+      
+      toast.success('Login successful!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(error.response?.data?.detail || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,17 +63,18 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Email Address
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
                 <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -70,11 +92,13 @@ const LoginPage = () => {
                   className="w-full pl-10 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   placeholder="Enter your password"
                   required
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -83,16 +107,13 @@ const LoginPage = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500" />
+                <input type="checkbox" className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500" disabled={loading} />
                 <span className="ml-2 text-sm text-neutral-600">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                Forgot password?
-              </a>
             </div>
 
-            <Button type="submit" variant="primary" fullWidth size="lg">
-              Sign In
+            <Button type="submit" variant="primary" fullWidth size="lg" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 

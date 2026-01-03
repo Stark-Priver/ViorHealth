@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import Button from '../components/common/Button';
 import { toast } from 'react-toastify';
-import { authAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,16 +26,7 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      const response = await authAPI.login(formData);
-      const { access, refresh } = response.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      // Get user data
-      const userResponse = await authAPI.getCurrentUser();
-      localStorage.setItem('user', JSON.stringify(userResponse.data));
-      
+      await login(formData);
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error) {

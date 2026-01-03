@@ -1,8 +1,29 @@
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+    navigate('/login');
+  };
+
+  const getRoleDisplay = (role) => {
+    const roleMap = {
+      admin: 'Administrator',
+      manager: 'Manager',
+      pharmacist: 'Pharmacist',
+      cashier: 'Cashier',
+    };
+    return roleMap[role] || role;
+  };
 
   return (
     <nav className="bg-white border-b border-neutral-200 px-6 py-4 sticky top-0 z-40">
@@ -39,13 +60,21 @@ const Navbar = () => {
                 <User className="w-6 h-6 text-primary-600" />
               </div>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-semibold text-neutral-800">Dr. Sarah Johnson</p>
-                <p className="text-xs text-neutral-500">Pharmacist</p>
+                <p className="text-sm font-semibold text-neutral-800">
+                  {user?.first_name && user?.last_name 
+                    ? `${user.first_name} ${user.last_name}`
+                    : user?.username || 'User'}
+                </p>
+                <p className="text-xs text-neutral-500">{getRoleDisplay(user?.role)}</p>
               </div>
             </button>
 
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-neutral-200 py-2">
+                <div className="px-4 py-2 border-b border-neutral-200">
+                  <p className="text-xs text-neutral-500">Signed in as</p>
+                  <p className="text-sm font-semibold text-neutral-800">{user?.username}</p>
+                </div>
                 <button className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2">
                   <User className="w-4 h-4" />
                   Profile
@@ -55,7 +84,10 @@ const Navbar = () => {
                   Settings
                 </button>
                 <hr className="my-2 border-neutral-200" />
-                <button className="w-full px-4 py-2 text-left text-sm text-danger-600 hover:bg-danger-50 flex items-center gap-2">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left text-sm text-danger-600 hover:bg-danger-50 flex items-center gap-2"
+                >
                   <LogOut className="w-4 h-4" />
                   Logout
                 </button>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import StatCard from '../common/StatCard';
 import { 
-  Users, 
   Package, 
   DollarSign, 
   TrendingUp,
@@ -13,7 +12,7 @@ import {
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import Loader from '../common/Loader';
-import { analyticsAPI, inventoryAPI, salesAPI } from '../../services/api';
+import { analyticsAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 
 const AdminDashboard = () => {

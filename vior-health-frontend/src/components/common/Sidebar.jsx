@@ -10,19 +10,70 @@ import {
   Truck
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
+  const { user, hasRole } = useAuth();
+
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Package, label: 'Inventory', path: '/inventory' },
-    { icon: ShoppingCart, label: 'Sales & POS', path: '/sales' },
-    { icon: Pill, label: 'Prescriptions', path: '/prescriptions' },
-    { icon: Truck, label: 'Suppliers', path: '/suppliers' },
-    { icon: TrendingUp, label: 'Reports', path: '/reports' },
-    { icon: Users, label: 'Customers', path: '/customers' },
-    { icon: FileText, label: 'Audit Logs', path: '/audit' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { 
+      icon: LayoutDashboard, 
+      label: 'Dashboard', 
+      path: '/dashboard',
+      roles: ['admin', 'manager', 'pharmacist', 'cashier']
+    },
+    { 
+      icon: Package, 
+      label: 'Inventory', 
+      path: '/inventory',
+      roles: ['admin', 'manager', 'pharmacist']
+    },
+    { 
+      icon: ShoppingCart, 
+      label: 'Sales & POS', 
+      path: '/sales',
+      roles: ['admin', 'manager', 'pharmacist', 'cashier']
+    },
+    { 
+      icon: Pill, 
+      label: 'Prescriptions', 
+      path: '/prescriptions',
+      roles: ['admin', 'manager', 'pharmacist']
+    },
+    { 
+      icon: Truck, 
+      label: 'Suppliers', 
+      path: '/suppliers',
+      roles: ['admin', 'manager']
+    },
+    { 
+      icon: TrendingUp, 
+      label: 'Reports', 
+      path: '/reports',
+      roles: ['admin', 'manager']
+    },
+    { 
+      icon: Users, 
+      label: 'Customers', 
+      path: '/customers',
+      roles: ['admin', 'manager', 'pharmacist', 'cashier']
+    },
+    { 
+      icon: FileText, 
+      label: 'Audit Logs', 
+      path: '/audit',
+      roles: ['admin']
+    },
+    { 
+      icon: Settings, 
+      label: 'Settings', 
+      path: '/settings',
+      roles: ['admin', 'manager']
+    },
   ];
+
+  // Filter menu items based on user role
+  const visibleMenuItems = menuItems.filter(item => hasRole(item.roles));
 
   return (
     <aside className="w-64 bg-white border-r border-neutral-200 min-h-screen sticky top-0">
@@ -40,7 +91,7 @@ const Sidebar = () => {
         </div>
 
         <nav className="space-y-2">
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -53,6 +104,14 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
+
+        {/* User Role Indicator */}
+        {user && (
+          <div className="mt-8 p-3 bg-primary-50 rounded-lg">
+            <p className="text-xs text-neutral-600 mb-1">Current Role</p>
+            <p className="text-sm font-semibold text-primary-700 capitalize">{user.role}</p>
+          </div>
+        )}
       </div>
     </aside>
   );

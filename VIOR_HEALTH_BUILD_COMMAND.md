@@ -4,47 +4,70 @@
 
 Build a **professional, enterprise-grade Pharmacy Management System** called **Vior Health Integrated Pharmacy Management System** (PRITECH VIOR Platform).
 
-## ✅ PROJECT STATUS - UPDATED
+## ✅ PROJECT STATUS - COMPLETE
 
-### Completed
+### Completed Features
 - ✅ Full React frontend (34 files, 25+ components)
 - ✅ Simplified landing page with TSH pricing
-- ✅ Django backend with 5 apps (accounts, inventory, sales, prescriptions, analytics)
+- ✅ Django REST API backend with JWT authentication
+- ✅ Role-based access control (Admin, Manager, Pharmacist, Cashier)
 - ✅ All database models created and migrated
 - ✅ Admin panel configured for all models
-- ✅ requirements.txt with all dependencies
+- ✅ API endpoints for inventory, sales, prescriptions, analytics
+- ✅ Protected routes with user authentication
+- ✅ Environment variable configuration
 
-### Ready to Build & Run
+## 🚀 Quick Start Guide
 
-#### Backend Setup
+### Backend Setup
+
 ```bash
+# Navigate to backend directory
 cd vior_health_backend
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Create superuser (first time only)
-python manage.py createsuperuser
+# Run migrations
+python manage.py migrate
 
-# Run development server
+# Create sample users (admin, manager, pharmacist, cashier)
+python manage.py create_sample_users
+
+# Start development server
 python manage.py runserver
 ```
 
-#### Frontend Setup
+**Backend URL**: http://localhost:8000/api/
+**Admin Panel**: http://localhost:8000/admin/
+
+### Frontend Setup
+
 ```bash
+# Navigate to frontend directory
 cd vior-health-frontend
 
 # Install dependencies
 npm install
 
-# Run development server
+# Start development server
 npm run dev
 ```
 
-### Access Points
-- Frontend: http://localhost:5173/
-- Backend API: http://localhost:8000/api/
-- Admin Panel: http://localhost:8000/admin/
+**Frontend URL**: http://localhost:5173/
+
+## 🔐 Login Credentials
+
+Test users created by `create_sample_users` command:
+
+| Role | Username | Password | Permissions |
+|------|----------|----------|-------------|
+| **Admin** | admin | admin123 | Full system access |
+| **Manager** | manager | manager123 | Inventory, sales, reports, settings |
+| **Pharmacist** | pharmacist | pharmacist123 | Inventory, sales, prescriptions |
+| **Cashier** | cashier | cashier123 | Sales, customers only |
+
+## 🏗️ System Architecture
 
 ---
 

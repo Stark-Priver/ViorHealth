@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from datetime import datetime
 from .models import Prescription, PrescriptionItem
-from sales.models import Customer
+from sales.models import Customer, Sale, SaleItem
 from inventory.models import Product
 from .serializers import PrescriptionSerializer, CreatePrescriptionSerializer
 
@@ -33,6 +33,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         serializer = CreatePrescriptionSerializer(data=request.data)
         
         if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)  # Debug logging
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         data = serializer.validated_data
@@ -108,6 +109,10 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Optional: Create a sale when dispensing
+        create_sale = request.data.get('create_sale', False)
+        payment_method = request.data.get('payment_method', 'cash')
+        
         try:
             with transaction.atomic():
                 # Check stock for all items
@@ -116,6 +121,56 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                         return Response(
                             {'error': f'Insufficient stock for {item.product.name}'},
                             status=status.HTTP_400_BAD_REQUEST
+                        )
+                
+                # Create sale if requested
+                sale = None
+                if create_sale:
+                    # Calculate totals
+                    from decimal import Decimal
+                    subtotal = sum(Decimal(str(item.product.unit_price)) * item.quantity for item in prescription.items.all())
+                    tax = subtotal * Decimal('0.18')  # 18% VAT
+                    total = subtotal + tax
+                    
+                    # Generate invoice number
+                    today = datetime.now()
+                    invoice_prefix = f"INV{today.strftime('%Y%m%d')}"
+                    last_sale = Sale.objects.filter(
+                        invoice_number__startswith=invoice_prefix
+                    ).order_by('-invoice_number').first()
+                    
+                    if last_sale:
+                        last_number = int(last_sale.invoice_number[-4:])
+                        invoice_number = f"{invoice_prefix}{str(last_number + 1).zfill(4)}"
+                    else:
+                        invoice_number = f"{invoice_prefix}0001"
+                    
+                    # Create sale
+                    sale = Sale.objects.create(
+                        invoice_number=invoice_number,
+                        customer=prescription.customer,
+                        subtotal=subtotal,
+                        tax=tax,
+                        discount=0,
+                        total=total,
+                        payment_method=payment_method,
+                        amount_paid=total,
+                        change_amount=0,
+                        status='completed',
+                        cashier=request.user,
+                        notes=f"Prescription #{prescription.prescription_number}"
+                    )
+                    
+                    # Create sale items
+                    for item in prescription.items.all():
+                        from decimal import Decimal
+                        SaleItem.objects.create(
+                            sale=sale,
+                            product=item.product,
+                            quantity=item.quantity,
+                            unit_price=Decimal(str(item.product.unit_price)),
+                            discount=Decimal('0'),
+                            total=Decimal(str(item.product.unit_price)) * item.quantity
                         )
                 
                 # Update stock
@@ -130,9 +185,17 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 prescription.dispensed_at = datetime.now()
                 prescription.save()
                 
-                return Response(PrescriptionSerializer(prescription).data)
+                response_data = PrescriptionSerializer(prescription).data
+                if sale:
+                    response_data['sale_id'] = sale.id
+                    response_data['invoice_number'] = sale.invoice_number
+                
+                return Response(response_data)
         
         except Exception as e:
+            import traceback
+            print("Dispense error:", str(e))
+            print("Traceback:", traceback.format_exc())
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST

@@ -15,6 +15,8 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import SuppliersPage from './pages/SuppliersPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
+import CustomersPage from './pages/CustomersPage';
+import ProfilePage from './pages/ProfilePage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -132,13 +134,37 @@ function App() {
               }
             />
 
-            {/* Prescriptions - Admin, Manager, Pharmacist */}
+            {/* Prescriptions - Admin, Pharmacist only */}
             <Route
               path="/prescriptions"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'manager', 'pharmacist']}>
+                <ProtectedRoute allowedRoles={['admin', 'pharmacist']}>
                   <MainLayout>
                     <PrescriptionsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Customers - Admin, Manager, Pharmacist, Cashier */}
+            <Route
+              path="/customers"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager', 'pharmacist', 'cashier']}>
+                  <MainLayout>
+                    <CustomersPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Profile - All authenticated users */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ProfilePage />
                   </MainLayout>
                 </ProtectedRoute>
               }

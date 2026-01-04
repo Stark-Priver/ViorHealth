@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, FileText, Clock, CheckCircle, XCircle, User } from 'lucide-react';
+import { Plus, Search, FileText, Clock, CheckCircle, XCircle, User, Eye } from 'lucide-react';
 import { prescriptionsAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+import Modal from '../components/common/Modal';
+import PrescriptionForm from '../components/prescriptions/PrescriptionForm';
 
 const PrescriptionsPage = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const { hasRole } = useAuth();
 
   useEffect(() => {
     fetchPrescriptions();
@@ -27,13 +34,27 @@ const PrescriptionsPage = () => {
   };
 
   const handleDispense = async (id) => {
+    const createSale = window.confirm(
+      'Do you want to create a sale record for this prescription?\n\n' +
+      'Click OK to create a sale, or Cancel to just dispense without sale.'
+    );
+    
     try {
-      await prescriptionsAPI.dispensePrescription(id);
-      toast.success('Prescription dispensed successfully');
+      const response = await prescriptionsAPI.dispensePrescription(id, {
+        create_sale: createSale,
+        payment_method: 'cash'
+      });
+      
+      if (createSale && response.data.invoice_number) {
+        toast.success(`Prescription dispensed successfully! Invoice: ${response.data.invoice_number}`);
+      } else {
+        toast.success('Prescription dispensed successfully');
+      }
+      
       fetchPrescriptions();
     } catch (error) {
       console.error('Error dispensing prescription:', error);
-      toast.error('Failed to dispense prescription');
+      toast.error(error.response?.data?.error || 'Failed to dispense prescription');
     }
   };
 
@@ -48,6 +69,16 @@ const PrescriptionsPage = () => {
       console.error('Error cancelling prescription:', error);
       toast.error('Failed to cancel prescription');
     }
+  };
+
+  const handleViewDetails = async (prescription) => {
+    setSelectedPrescription(prescription);
+    setShowDetailsModal(true);
+  };
+
+  const handleCreatePrescription = () => {
+    setShowCreateModal(false);
+    fetchPrescriptions();
   };
 
   const filteredPrescriptions = prescriptions.filter(prescription => {
@@ -87,6 +118,15 @@ const PrescriptionsPage = () => {
           <h1 className="text-3xl font-bold text-neutral-900">Prescriptions</h1>
           <p className="text-neutral-600 mt-1">Manage and track prescription orders</p>
         </div>
+        {hasRole(['admin', 'pharmacist']) && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            New Prescription
+          </button>
+        )}
       </div>
 
       {/* Filters and Search */}
@@ -175,10 +215,10 @@ const PrescriptionsPage = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-neutral-900">
-                            {prescription.patient_name || 'Unknown Patient'}
+                            {prescription.customer_name || 'Unknown Patient'}
                           </div>
                           <div className="text-sm text-neutral-500">
-                            ID: {prescription.id}
+                            RX #{prescription.prescription_number}
                           </div>
                         </div>
                       </div>
@@ -199,6 +239,13 @@ const PrescriptionsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewDetails(prescription)}
+                          className="p-2 bg-primary-100 text-primary-600 rounded-lg hover:bg-primary-200 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
                         {prescription.status === 'pending' && (
                           <>
                             <button
@@ -217,14 +264,6 @@ const PrescriptionsPage = () => {
                             </button>
                           </>
                         )}
-                        {prescription.status !== 'pending' && (
-                          <button
-                            className="p-2 bg-neutral-100 text-neutral-600 rounded-lg hover:bg-neutral-200 transition-colors"
-                            title="View Details"
-                          >
-                            <FileText className="w-5 h-5" />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -240,6 +279,151 @@ const PrescriptionsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Create Prescription Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create New Prescription"
+        size="xl"
+      >
+        <PrescriptionForm
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreatePrescription}
+        />
+      </Modal>
+
+      {/* Prescription Details Modal */}
+      <Modal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedPrescription(null);
+        }}
+        title="Prescription Details"
+        size="lg"
+      >
+        {selectedPrescription && (
+          <div className="space-y-6">
+            {/* Header Info */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-neutral-50 rounded-lg">
+              <div>
+                <p className="text-sm text-neutral-600">Prescription Number</p>
+                <p className="font-semibold text-neutral-900">{selectedPrescription.prescription_number}</p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Status</p>
+                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusColor(selectedPrescription.status)}`}>
+                  {selectedPrescription.status}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Patient Name</p>
+                <p className="font-semibold text-neutral-900">{selectedPrescription.customer_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Prescription Date</p>
+                <p className="font-semibold text-neutral-900">{new Date(selectedPrescription.prescription_date).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            {/* Doctor Info */}
+            <div className="border-t border-neutral-200 pt-4">
+              <h4 className="font-semibold text-neutral-900 mb-3">Doctor Information</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-neutral-600">Doctor Name</p>
+                  <p className="font-medium text-neutral-900">{selectedPrescription.doctor_name}</p>
+                </div>
+                {selectedPrescription.doctor_license && (
+                  <div>
+                    <p className="text-sm text-neutral-600">License Number</p>
+                    <p className="font-medium text-neutral-900">{selectedPrescription.doctor_license}</p>
+                  </div>
+                )}
+              </div>
+              {selectedPrescription.diagnosis && (
+                <div className="mt-3">
+                  <p className="text-sm text-neutral-600">Diagnosis</p>
+                  <p className="text-neutral-900">{selectedPrescription.diagnosis}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Medications */}
+            <div className="border-t border-neutral-200 pt-4">
+              <h4 className="font-semibold text-neutral-900 mb-3">Prescribed Medications</h4>
+              <div className="space-y-3">
+                {selectedPrescription.items?.map((item, index) => (
+                  <div key={index} className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <h5 className="font-semibold text-neutral-900">{item.product_name}</h5>
+                      <span className="px-2 py-1 bg-white rounded text-sm font-medium">Qty: {item.quantity}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <p className="text-neutral-600">Dosage</p>
+                        <p className="font-medium text-neutral-900">{item.dosage}</p>
+                      </div>
+                      <div>
+                        <p className="text-neutral-600">Frequency</p>
+                        <p className="font-medium text-neutral-900">{item.frequency}</p>
+                      </div>
+                      <div>
+                        <p className="text-neutral-600">Duration</p>
+                        <p className="font-medium text-neutral-900">{item.duration}</p>
+                      </div>
+                    </div>
+                    {item.instructions && (
+                      <div className="mt-2 pt-2 border-t border-amber-300">
+                        <p className="text-xs text-neutral-600">Instructions</p>
+                        <p className="text-sm text-neutral-900">{item.instructions}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            {selectedPrescription.notes && (
+              <div className="border-t border-neutral-200 pt-4">
+                <h4 className="font-semibold text-neutral-900 mb-2">Additional Notes</h4>
+                <p className="text-neutral-700">{selectedPrescription.notes}</p>
+              </div>
+            )}
+
+            {/* Dispensing Info */}
+            {selectedPrescription.status === 'dispensed' && (
+              <div className="border-t border-neutral-200 pt-4 bg-success-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-success-900 mb-2">Dispensing Information</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-success-700">Dispensed By</p>
+                    <p className="font-medium text-success-900">{selectedPrescription.dispensed_by_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-success-700">Dispensed At</p>
+                    <p className="font-medium text-success-900">{selectedPrescription.dispensed_at ? formatDate(selectedPrescription.dispensed_at) : 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200">
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPrescription(null);
+                }}
+                className="px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

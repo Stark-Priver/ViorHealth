@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { Plus, Minus, Trash2, ShoppingCart, Search, DollarSign } from 'lucide-react';
+import Modal from '../common/Modal';
+import { Plus, Minus, Trash2, ShoppingCart, Search, DollarSign, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { inventoryAPI, salesAPI } from '../../services/api';
+import PrescriptionQuickView from '../prescriptions/PrescriptionQuickView';
 
 const POSInterface = () => {
   const [cart, setCart] = useState([]);
@@ -13,6 +15,7 @@ const POSInterface = () => {
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [processing, setProcessing] = useState(false);
+  const [showPrescriptions, setShowPrescriptions] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -84,6 +87,44 @@ const POSInterface = () => {
     setCart(cart.filter(item => item.id !== id));
   };
 
+  const handleSelectPrescription = (prescription) => {
+    // Add prescription items to cart
+    if (prescription && prescription.items) {
+      prescription.items.forEach(item => {
+        const product = products.find(p => p.id === item.product);
+        if (product && product.quantity >= item.quantity) {
+          const existingItem = cart.find(cartItem => cartItem.id === product.id);
+          if (existingItem) {
+            setCart(cart.map(cartItem =>
+              cartItem.id === product.id
+                ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
+                : cartItem
+            ));
+          } else {
+            setCart(prevCart => [...prevCart, {
+              id: product.id,
+              name: product.name,
+              price: parseFloat(product.unit_price),
+              stock: product.quantity,
+              unit_type: product.unit_type || 'piece',
+              dosage_form: product.dosage_form || '',
+              units_per_pack: product.units_per_pack || 1,
+              quantity: item.quantity
+            }]);
+          }
+        } else {
+          toast.warning(`Insufficient stock for ${item.product_name}`);
+        }
+      });
+      
+      if (prescription.customer_name) {
+        setCustomerName(prescription.customer_name);
+      }
+      
+      toast.success('Prescription items added to cart');
+    }
+  };
+
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.18; // 18% VAT in Tanzania
   const total = subtotal + tax;
@@ -134,7 +175,7 @@ const POSInterface = () => {
       {/* Products Section */}
       <div className="lg:col-span-2">
         <Card>
-          <div className="mb-4">
+          <div className="mb-4 space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
               <input
@@ -145,6 +186,14 @@ const POSInterface = () => {
                 className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
+            
+            <button
+              onClick={() => setShowPrescriptions(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 border border-teal-300 rounded-lg hover:bg-teal-100 transition-colors font-medium"
+            >
+              <FileText className="w-5 h-5" />
+              Load Prescription
+            </button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto">
@@ -304,6 +353,19 @@ const POSInterface = () => {
           </Button>
         </Card>
       </div>
+
+      {/* Prescription Quick View Modal */}
+      <Modal
+        isOpen={showPrescriptions}
+        onClose={() => setShowPrescriptions(false)}
+        title="Pending Prescriptions"
+        size="lg"
+      >
+        <PrescriptionQuickView
+          onSelectPrescription={handleSelectPrescription}
+          onClose={() => setShowPrescriptions(false)}
+        />
+      </Modal>
     </div>
   );
 };

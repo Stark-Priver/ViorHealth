@@ -6,7 +6,6 @@ import {
   TrendingUp, 
   Users, 
   FileText,
-  Settings,
   Truck
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -45,7 +44,7 @@ const Sidebar = () => {
       icon: Pill, 
       label: 'Prescriptions', 
       path: '/prescriptions',
-      roles: ['admin', 'manager', 'pharmacist']
+      roles: ['admin', 'pharmacist']
     },
     { 
       icon: Truck, 
@@ -70,12 +69,6 @@ const Sidebar = () => {
       label: 'Audit Logs', 
       path: '/audit',
       roles: ['admin']
-    },
-    { 
-      icon: Settings, 
-      label: 'Settings', 
-      path: '/settings',
-      roles: ['admin', 'manager']
     },
   ];
 

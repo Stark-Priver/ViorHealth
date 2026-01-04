@@ -60,6 +60,7 @@ export const authAPI = {
   login: (credentials) => api.post('/accounts/login/', credentials),
   register: (userData) => api.post('/accounts/register/', userData),
   getCurrentUser: () => api.get('/accounts/users/me/'),
+  updateProfile: (data) => api.put('/accounts/users/me/', data),
   changePassword: (passwords) => api.post('/accounts/users/change_password/', passwords),
   
   // User Management (Admin)
@@ -120,7 +121,7 @@ export const prescriptionsAPI = {
   getPrescriptions: (params) => api.get('/prescriptions/prescriptions/', { params }),
   getPrescription: (id) => api.get(`/prescriptions/prescriptions/${id}/`),
   createPrescription: (data) => api.post('/prescriptions/prescriptions/create_prescription/', data),
-  dispensePrescription: (id) => api.post(`/prescriptions/prescriptions/${id}/dispense/`),
+  dispensePrescription: (id, data = {}) => api.post(`/prescriptions/prescriptions/${id}/dispense/`, data),
   cancelPrescription: (id) => api.post(`/prescriptions/prescriptions/${id}/cancel/`),
   getPendingPrescriptions: () => api.get('/prescriptions/prescriptions/pending/'),
 };

@@ -7,13 +7,23 @@ import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     toast.success('Logged out successfully');
     navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    setShowProfileMenu(false);
+    navigate('/profile');
+  };
+
+  const handleSettingsClick = () => {
+    setShowProfileMenu(false);
+    navigate('/settings');
   };
 
   const getRoleDisplay = (role) => {
@@ -76,14 +86,22 @@ const Navbar = () => {
                   <p className="text-xs text-neutral-500">Signed in as</p>
                   <p className="text-sm font-semibold text-neutral-800">{user?.username}</p>
                 </div>
-                <button className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2">
+                <button 
+                  onClick={handleProfileClick}
+                  className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2"
+                >
                   <User className="w-4 h-4" />
                   Profile
                 </button>
-                <button className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </button>
+                {hasRole(['admin', 'manager']) && (
+                  <button 
+                    onClick={handleSettingsClick}
+                    className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </button>
+                )}
                 <hr className="my-2 border-neutral-200" />
                 <button 
                   onClick={handleLogout}

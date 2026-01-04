@@ -25,7 +25,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
 class CreatePrescriptionSerializer(serializers.Serializer):
     customer = serializers.IntegerField()
     doctor_name = serializers.CharField(max_length=200)
-    doctor_license = serializers.CharField(max_length=100)
+    doctor_license = serializers.CharField(max_length=100, required=False, allow_blank=True)
     diagnosis = serializers.CharField()
     prescription_date = serializers.DateField()
     items = serializers.ListField(

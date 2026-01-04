@@ -145,16 +145,6 @@ const SalesHistory = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-neutral-800">Sales History</h2>
-          <p className="text-sm text-neutral-600">View all completed transactions</p>
-        </div>
-        <Button variant="secondary" icon={<Download className="w-4 h-4" />}>
-          Export Report
-        </Button>
-      </div>
-
       <Card className="mb-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">

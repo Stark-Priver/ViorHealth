@@ -4,7 +4,7 @@ const Button = ({
   children, 
   variant = 'primary', 
   size = 'md', 
-  icon, 
+  icon: Icon, 
   onClick, 
   disabled = false,
   className,
@@ -41,7 +41,7 @@ const Button = ({
         className
       )}
     >
-      {icon && <span>{icon}</span>}
+      {Icon && <Icon className="w-4 h-4" />}
       {children}
     </button>
   );

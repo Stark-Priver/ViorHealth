@@ -136,11 +136,11 @@ function App() {
               }
             />
 
-            {/* Expenses - Admin and Manager only */}
+            {/* Expenses - All authenticated users can record their own expenses */}
             <Route
               path="/expenses"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                <ProtectedRoute>
                   <MainLayout>
                     <ExpensesPage />
                   </MainLayout>

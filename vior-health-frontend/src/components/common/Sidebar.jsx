@@ -57,7 +57,7 @@ const Sidebar = () => {
       icon: Receipt, 
       label: 'Expenses', 
       path: '/expenses',
-      roles: ['admin', 'manager']
+      roles: ['admin', 'manager', 'pharmacist', 'cashier']
     },
     { 
       icon: FileText, 

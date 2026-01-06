@@ -22,6 +22,7 @@ const ReportsPage = () => {
   const [dateRange, setDateRange] = useState('30');
   
   const [salesStats, setSalesStats] = useState(null);
+  const [inventoryStats, setInventoryStats] = useState(null);
   const [salesChart, setSalesChart] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
@@ -37,6 +38,10 @@ const ReportsPage = () => {
       // Fetch sales statistics with date range
       const statsRes = await salesAPI.getSalesStatistics({ days: parseInt(dateRange) });
       setSalesStats(statsRes.data);
+      
+      // Fetch inventory summary
+      const inventoryRes = await analyticsAPI.getInventorySummary();
+      setInventoryStats(inventoryRes.data);
       
       // Fetch sales chart data
       const chartRes = await analyticsAPI.getSalesChart(parseInt(dateRange));
@@ -231,7 +236,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Low Stock Items</p>
               <h3 className="text-3xl font-bold text-danger-600">
-                {lowStockProducts.length}
+                {inventoryStats?.low_stock_count || 0}
               </h3>
               <p className="text-sm text-neutral-600 mt-2">
                 Requires attention
@@ -248,7 +253,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Total Products</p>
               <h3 className="text-3xl font-bold text-neutral-800">
-                {salesStats?.total_products || 0}
+                {inventoryStats?.total_products || 0}
               </h3>
               <p className="text-sm text-neutral-600 mt-2">
                 In inventory
@@ -265,7 +270,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Out of Stock</p>
               <h3 className="text-3xl font-bold text-warning-600">
-                {lowStockProducts.filter(p => p.stock_quantity === 0).length}
+                {inventoryStats?.out_of_stock || 0}
               </h3>
               <p className="text-sm text-neutral-600 mt-2">
                 Needs restock
@@ -298,19 +303,19 @@ const ReportsPage = () => {
                   <td className="px-4 py-3 text-sm text-neutral-600">{product.sku}</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`font-semibold ${
-                      product.stock_quantity === 0 ? 'text-danger-600' : 'text-warning-600'
+                      product.quantity === 0 ? 'text-danger-600' : 'text-warning-600'
                     }`}>
-                      {product.stock_quantity}
+                      {product.quantity}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-600">{product.min_stock_level}</td>
+                  <td className="px-4 py-3 text-sm text-neutral-600">{product.reorder_level}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      product.stock_quantity === 0
+                      product.quantity === 0
                         ? 'bg-danger-100 text-danger-700'
                         : 'bg-warning-100 text-warning-700'
                     }`}>
-                      {product.stock_quantity === 0 ? 'Out of Stock' : 'Low Stock'}
+                      {product.quantity === 0 ? 'Out of Stock' : 'Low Stock'}
                     </span>
                   </td>
                 </tr>

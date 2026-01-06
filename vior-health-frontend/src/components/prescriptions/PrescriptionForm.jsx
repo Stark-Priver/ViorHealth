@@ -13,7 +13,6 @@ const PrescriptionForm = ({ onSuccess, prescription = null }) => {
     medications: [{ drug: '', quantity: 1, dosage: '', frequency: '', duration: '' }]
   });
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -31,15 +30,12 @@ const PrescriptionForm = ({ onSuccess, prescription = null }) => {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
       const response = await inventoryAPI.getProducts();
       const data = Array.isArray(response.data) ? response.data : response.data.results || [];
       setProducts(data);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
-    } finally {
-      setLoading(false);
     }
   };
 

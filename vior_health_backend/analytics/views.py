@@ -68,10 +68,15 @@ def dashboard_stats(request):
     
     # Prescription statistics
     pending_prescriptions = Prescription.objects.filter(status='pending').count()
+    prescriptions_dispensed_today = Prescription.objects.filter(
+        status='dispensed',
+        dispensed_at__date=today
+    ).count()
     
     return Response({
         'today_revenue': float(today_revenue),
         'today_transactions': today_transactions,
+        'today_sales': today_transactions,  # For pharmacist dashboard
         'week_revenue': float(week_revenue),
         'month_revenue': float(month_revenue),
         'month_transactions': month_transactions,
@@ -81,6 +86,7 @@ def dashboard_stats(request):
         'products_count': total_products,
         'low_stock_count': low_stock_count,
         'pending_prescriptions': pending_prescriptions,
+        'prescriptions_dispensed_today': prescriptions_dispensed_today,  # For pharmacist dashboard
         'revenue_growth': f"{'+' if revenue_growth >= 0 else ''}{revenue_growth:.1f}%",
         'sales_growth': f"{'+' if sales_growth >= 0 else ''}{sales_growth:.1f}%",
     })

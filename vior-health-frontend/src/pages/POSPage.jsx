@@ -14,8 +14,6 @@ const POSPage = () => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
   const [applyVat, setApplyVat] = useState(true);
@@ -133,8 +131,6 @@ const POSPage = () => {
         // Reset cart and form
         setCart([]);
         setAmountPaid('');
-        setCustomerName('');
-        setCustomerPhone('');
         setDiscount(0);
         setNotes('');
         setApplyVat(true);

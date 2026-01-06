@@ -53,7 +53,7 @@ const ProfilePage = () => {
     
     try {
       setLoading(true);
-      const response = await api.put(`/accounts/users/${user.id}/`, profileData);
+      await api.put(`/accounts/users/${user.id}/`, profileData);
       toast.success('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);

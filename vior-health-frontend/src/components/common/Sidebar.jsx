@@ -6,7 +6,8 @@ import {
   TrendingUp, 
   Users, 
   FileText,
-  Truck
+  Truck,
+  Receipt
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -50,6 +51,12 @@ const Sidebar = () => {
       icon: Truck, 
       label: 'Suppliers', 
       path: '/suppliers',
+      roles: ['admin', 'manager']
+    },
+    { 
+      icon: Receipt, 
+      label: 'Expenses', 
+      path: '/expenses',
       roles: ['admin', 'manager']
     },
     { 

@@ -18,6 +18,7 @@ import PrescriptionsPage from './pages/PrescriptionsPage';
 import CreatePrescriptionPage from './pages/CreatePrescriptionPage';
 import CustomersPage from './pages/CustomersPage';
 import ProfilePage from './pages/ProfilePage';
+import ExpensesPage from './pages/ExpensesPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -130,6 +131,18 @@ function App() {
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <MainLayout>
                     <SuppliersPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Expenses - Admin and Manager only */}
+            <Route
+              path="/expenses"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <MainLayout>
+                    <ExpensesPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

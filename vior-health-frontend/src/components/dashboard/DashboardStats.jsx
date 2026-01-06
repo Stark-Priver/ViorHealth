@@ -54,34 +54,38 @@ const DashboardStats = () => {
         {
           icon: DollarSign,
           title: 'Total Revenue',
-          value: `TSH ${parseFloat(data.total_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          value: `TSH ${parseFloat(data.month_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           change: data.revenue_growth || '+0%',
-          changeType: 'increase',
+          changeType: data.revenue_growth?.startsWith('-') ? 'decrease' : 'increase',
           iconColor: 'bg-success-600',
+          subtitle: 'vs last month'
         },
         {
           icon: ShoppingCart,
           title: 'Total Sales',
-          value: (data.total_sales || 0).toString(),
+          value: (data.month_transactions || 0).toLocaleString(),
           change: data.sales_growth || '+0%',
-          changeType: 'increase',
+          changeType: data.sales_growth?.startsWith('-') ? 'decrease' : 'increase',
           iconColor: 'bg-primary-600',
+          subtitle: 'vs last month'
         },
         {
           icon: Package,
           title: 'Products in Stock',
-          value: (data.products_count || 0).toString(),
-          change: data.stock_change || '0%',
-          changeType: data.stock_change?.startsWith('-') ? 'decrease' : 'increase',
+          value: (data.products_count || 0).toLocaleString(),
+          change: `${data.low_stock_count || 0} low stock`,
+          changeType: data.low_stock_count > 0 ? 'warning' : 'increase',
           iconColor: 'bg-warning-500',
+          subtitle: 'vs last month'
         },
         {
           icon: AlertTriangle,
           title: 'Low Stock Items',
-          value: (data.low_stock_count || 0).toString(),
-          change: data.low_stock_change || '+0',
-          changeType: 'increase',
+          value: (data.low_stock_count || 0).toLocaleString(),
+          change: data.low_stock_count > 0 ? 'Requires attention' : 'All good',
+          changeType: data.low_stock_count > 0 ? 'decrease' : 'increase',
           iconColor: 'bg-danger-600',
+          subtitle: 'vs last month'
         },
       ]);
     } catch (error) {

@@ -16,21 +16,25 @@ const SalesChart = () => {
     try {
       setLoading(true);
       const [salesResponse, topProductsResponse] = await Promise.all([
-        analyticsAPI.getSalesChart(),
-        analyticsAPI.getTopProducts()
+        analyticsAPI.getSalesChart(30), // Get last 30 days
+        analyticsAPI.getTopProducts(5)
       ]);
       
-      const sales = salesResponse.data?.sales_data || [];
+      const salesData = salesResponse.data || [];
       const topProducts = topProductsResponse.data || [];
       
-      // Format sales data
-      const formattedSales = sales.length > 0 ? sales : [
-        { month: 'Jan', sales: 0, revenue: 0 },
-        { month: 'Feb', sales: 0, revenue: 0 },
-        { month: 'Mar', sales: 0, revenue: 0 },
-        { month: 'Apr', sales: 0, revenue: 0 },
-        { month: 'May', sales: 0, revenue: 0 },
-        { month: 'Jun', sales: 0, revenue: 0 },
+      // Format sales data - group by date
+      const formattedSales = salesData.length > 0 ? salesData.map(item => ({
+        date: item.date ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+        sales: item.count || 0,
+        revenue: item.total || 0
+      })) : [
+        { date: 'Jan 1', sales: 0, revenue: 0 },
+        { date: 'Jan 2', sales: 0, revenue: 0 },
+        { date: 'Jan 3', sales: 0, revenue: 0 },
+        { date: 'Jan 4', sales: 0, revenue: 0 },
+        { date: 'Jan 5', sales: 0, revenue: 0 },
+        { date: 'Jan 6', sales: 0, revenue: 0 },
       ];
       
       setSalesData(formattedSales);
@@ -38,7 +42,7 @@ const SalesChart = () => {
       // Format category data from top products
       const colors = ['#0284c7', '#22c55e', '#f59e0b', '#a855f7', '#ef4444'];
       const formattedCategories = topProducts.slice(0, 5).map((product, index) => ({
-        name: product.name || product.category || `Product ${index + 1}`,
+        name: product.product__name || product.name || `Product ${index + 1}`,
         value: product.total_quantity || product.value || 0,
         color: colors[index % colors.length]
       }));
@@ -49,12 +53,12 @@ const SalesChart = () => {
     } catch (error) {
       console.error('Error fetching chart data:', error);
       setSalesData([
-        { month: 'Jan', sales: 0, revenue: 0 },
-        { month: 'Feb', sales: 0, revenue: 0 },
-        { month: 'Mar', sales: 0, revenue: 0 },
-        { month: 'Apr', sales: 0, revenue: 0 },
-        { month: 'May', sales: 0, revenue: 0 },
-        { month: 'Jun', sales: 0, revenue: 0 },
+        { date: 'Jan 1', sales: 0, revenue: 0 },
+        { date: 'Jan 2', sales: 0, revenue: 0 },
+        { date: 'Jan 3', sales: 0, revenue: 0 },
+        { date: 'Jan 4', sales: 0, revenue: 0 },
+        { date: 'Jan 5', sales: 0, revenue: 0 },
+        { date: 'Jan 6', sales: 0, revenue: 0 },
       ]);
       setCategoryData([{ name: 'No Data', value: 100, color: '#e5e5e5' }]);
     } finally {
@@ -66,10 +70,13 @@ const SalesChart = () => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-neutral-200">
-          <p className="text-sm font-semibold text-neutral-800 mb-1">{payload[0]?.payload?.month}</p>
+          <p className="text-sm font-semibold text-neutral-800 mb-1">{payload[0]?.payload?.date}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm text-neutral-600">
-              {entry.name}: TSH {entry.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {entry.name}: {entry.name === 'revenue' ? 
+                `TSH ${entry.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` :
+                entry.value
+              }
             </p>
           ))}
         </div>
@@ -100,7 +107,14 @@ const SalesChart = () => {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-              <XAxis dataKey="month" stroke="#737373" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#737373"
+                tick={{ fontSize: 11 }}
+                angle={-45}
+                textAnchor="end"
+                height={70}
+              />
               <YAxis stroke="#737373" />
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="sales" stroke="#0284c7" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} name="Sales" />

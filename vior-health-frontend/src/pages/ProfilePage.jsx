@@ -150,7 +150,16 @@ const ProfilePage = () => {
                 )}
                 <div className="flex items-center gap-3 text-sm text-neutral-600">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {new Date(user?.date_joined).toLocaleDateString()}</span>
+                  <span>
+                    Joined {user?.date_joined ? 
+                      new Date(user.date_joined).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : 
+                      'N/A'
+                    }
+                  </span>
                 </div>
               </div>
             </div>

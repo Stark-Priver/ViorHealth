@@ -18,6 +18,7 @@ const POSPage = () => {
   const [customerPhone, setCustomerPhone] = useState('');
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
+  const [applyVat, setApplyVat] = useState(true);
 
   useEffect(() => {
     fetchProducts();
@@ -84,7 +85,7 @@ const POSPage = () => {
   };
 
   const calculateTax = () => {
-    return calculateSubtotal() * 0.18; // 18% VAT
+    return applyVat ? calculateSubtotal() * 0.18 : 0; // 18% VAT
   };
 
   const calculateTotal = () => {
@@ -112,18 +113,18 @@ const POSPage = () => {
       const saleData = {
         items: cart.map(item => ({
           product: item.id,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          discount: 0,
-          total: item.unit_price * item.quantity
+          quantity: parseInt(item.quantity),
+          unit_price: parseFloat(item.unit_price),
+          discount: 0
         })),
         payment_method: paymentMethod,
         amount_paid: parseFloat(amountPaid),
-        discount: discount,
-        tax: calculateTax(),
+        discount: parseFloat(discount) || 0,
+        tax: parseFloat(calculateTax()),
         notes: notes || ''
       };
 
+      console.log('Sale data being sent:', saleData); // Debug log
       const response = await salesAPI.createSale(saleData);
       
       if (response.data) {
@@ -136,6 +137,7 @@ const POSPage = () => {
         setCustomerPhone('');
         setDiscount(0);
         setNotes('');
+        setApplyVat(true);
         setShowCheckoutModal(false);
         
         // Refresh products to update stock
@@ -143,7 +145,13 @@ const POSPage = () => {
       }
     } catch (error) {
       console.error('Error processing sale:', error);
-      toast.error(error.response?.data?.error || 'Failed to process sale');
+      console.error('Error response:', error.response?.data); // Debug log
+      
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message ||
+                          JSON.stringify(error.response?.data) ||
+                          'Failed to process sale';
+      toast.error(errorMessage);
     }
   };
 
@@ -262,8 +270,17 @@ const POSPage = () => {
                     <span>Subtotal:</span>
                     <span>TZS {calculateSubtotal().toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   </div>
-                  <div className="flex justify-between text-neutral-600">
-                    <span>Tax (18%):</span>
+                  <div className="flex justify-between items-center text-neutral-600">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="vatToggle"
+                        checked={applyVat}
+                        onChange={(e) => setApplyVat(e.target.checked)}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <label htmlFor="vatToggle" className="cursor-pointer">Tax (18%):</label>
+                    </div>
                     <span>TZS {calculateTax().toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   </div>
                   {discount > 0 && (
@@ -303,8 +320,17 @@ const POSPage = () => {
               <span className="text-neutral-600">Subtotal:</span>
               <span className="font-medium">TZS {calculateSubtotal().toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-600">Tax (18%):</span>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="vatToggleModal"
+                  checked={applyVat}
+                  onChange={(e) => setApplyVat(e.target.checked)}
+                  className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                />
+                <label htmlFor="vatToggleModal" className="text-neutral-600 cursor-pointer">Tax (18%):</label>
+              </div>
               <span className="font-medium">TZS {calculateTax().toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t">

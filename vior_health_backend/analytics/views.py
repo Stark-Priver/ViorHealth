@@ -13,11 +13,28 @@ from prescriptions.models import Prescription
 @permission_classes([IsAuthenticated])
 def dashboard_stats(request):
     today = datetime.now().date()
+    week_start = today - timedelta(days=today.weekday())  # Start of week (Monday)
+    month_start = today.replace(day=1)  # Start of month
+    thirty_days_ago = today - timedelta(days=30)
     
     # Sales statistics
     today_sales = Sale.objects.filter(created_at__date=today, status='completed')
     today_revenue = today_sales.aggregate(Sum('total'))['total__sum'] or 0
     today_transactions = today_sales.count()
+    
+    # Week revenue
+    week_sales = Sale.objects.filter(created_at__date__gte=week_start, status='completed')
+    week_revenue = week_sales.aggregate(Sum('total'))['total__sum'] or 0
+    
+    # Month revenue
+    month_sales = Sale.objects.filter(created_at__date__gte=month_start, status='completed')
+    month_revenue = month_sales.aggregate(Sum('total'))['total__sum'] or 0
+    
+    # Average transaction (last 30 days)
+    last_30_days_sales = Sale.objects.filter(created_at__date__gte=thirty_days_ago, status='completed')
+    last_30_days_revenue = last_30_days_sales.aggregate(Sum('total'))['total__sum'] or 0
+    last_30_days_count = last_30_days_sales.count()
+    average_transaction = last_30_days_revenue / last_30_days_count if last_30_days_count > 0 else 0
     
     # Total statistics
     total_revenue = Sale.objects.filter(status='completed').aggregate(Sum('total'))['total__sum'] or 0
@@ -28,6 +45,9 @@ def dashboard_stats(request):
     return Response({
         'today_revenue': today_revenue,
         'today_transactions': today_transactions,
+        'week_revenue': week_revenue,
+        'month_revenue': month_revenue,
+        'average_transaction': average_transaction,
         'total_revenue': total_revenue,
         'total_products': total_products,
         'low_stock_products': low_stock_products,

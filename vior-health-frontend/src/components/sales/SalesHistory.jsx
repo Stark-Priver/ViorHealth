@@ -97,10 +97,10 @@ const SalesHistory = () => {
     },
     {
       header: 'Amount',
-      accessor: 'total_amount',
+      accessor: 'total',
       render: (row) => (
         <span className="font-bold text-neutral-800">
-          TSH {parseFloat(row.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          TSH {parseFloat(row.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       ),
     },

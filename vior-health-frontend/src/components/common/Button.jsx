@@ -4,7 +4,8 @@ const Button = ({
   children, 
   variant = 'primary', 
   size = 'md', 
-  icon: Icon, 
+  icon, 
+  Icon, 
   onClick, 
   disabled = false,
   className,
@@ -28,6 +29,16 @@ const Button = ({
     lg: 'px-6 py-3 text-base',
   };
 
+  // Determine which icon to render
+  let iconElement = null;
+  if (Icon) {
+    // Icon is a component reference
+    iconElement = <Icon className="w-4 h-4" />;
+  } else if (icon) {
+    // icon is already a JSX element or component reference
+    iconElement = typeof icon === 'function' ? icon({ className: 'w-4 h-4' }) : icon;
+  }
+
   return (
     <button
       type={type}
@@ -41,7 +52,7 @@ const Button = ({
         className
       )}
     >
-      {Icon && <Icon className="w-4 h-4" />}
+      {iconElement}
       {children}
     </button>
   );

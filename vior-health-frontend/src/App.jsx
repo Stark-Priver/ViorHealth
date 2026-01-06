@@ -15,6 +15,7 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import SuppliersPage from './pages/SuppliersPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
+import CreatePrescriptionPage from './pages/CreatePrescriptionPage';
 import CustomersPage from './pages/CustomersPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -145,7 +146,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
+            {/* Create Prescription - Admin and Pharmacist only */}
+            <Route
+              path="/prescriptions/create"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'pharmacist']}>
+                  <MainLayout>
+                    <CreatePrescriptionPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
             {/* Customers - Admin, Manager, Pharmacist, Cashier */}
             <Route
               path="/customers"

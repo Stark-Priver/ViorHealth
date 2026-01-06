@@ -113,7 +113,7 @@ export const salesAPI = {
   getSale: (id) => api.get(`/sales/sales/${id}/`),
   createSale: (data) => api.post('/sales/sales/create_sale/', data),
   getTodaySales: () => api.get('/sales/sales/today_sales/'),
-  getSalesStatistics: () => api.get('/sales/sales/statistics/'),
+  getSalesStatistics: (params) => api.get('/sales/sales/statistics/', { params }),
 };
 
 // Prescriptions API

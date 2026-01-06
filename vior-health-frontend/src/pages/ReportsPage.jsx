@@ -34,21 +34,21 @@ const ReportsPage = () => {
     try {
       setLoading(true);
       
-      // Fetch sales statistics
-      const statsRes = await salesAPI.getSalesStatistics();
+      // Fetch sales statistics with date range
+      const statsRes = await salesAPI.getSalesStatistics({ days: parseInt(dateRange) });
       setSalesStats(statsRes.data);
       
       // Fetch sales chart data
       const chartRes = await analyticsAPI.getSalesChart(parseInt(dateRange));
-      setSalesChart(chartRes.data);
+      setSalesChart(chartRes.data || []);
       
       // Fetch top products
       const topProdRes = await analyticsAPI.getTopProducts(10);
-      setTopProducts(topProdRes.data);
+      setTopProducts(topProdRes.data || []);
       
       // Fetch low stock products
       const lowStockRes = await inventoryAPI.getLowStockProducts();
-      setLowStockProducts(lowStockRes.data);
+      setLowStockProducts(lowStockRes.data || []);
       
     } catch (error) {
       console.error('Error fetching report data:', error);
@@ -77,7 +77,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Total Revenue</p>
               <h3 className="text-2xl font-bold text-neutral-800">
-                TSH {salesStats?.total_revenue?.toLocaleString() || '0'}
+                TSH {parseFloat(salesStats?.total_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
               <p className="text-sm text-success-600 mt-2">
                 Last {dateRange} days
@@ -94,7 +94,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Total Sales</p>
               <h3 className="text-2xl font-bold text-neutral-800">
-                {salesStats?.total_sales || 0}
+                {(salesStats?.total_sales || 0).toLocaleString()}
               </h3>
               <p className="text-sm text-primary-600 mt-2">
                 Transactions
@@ -111,7 +111,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Avg. Sale Value</p>
               <h3 className="text-2xl font-bold text-neutral-800">
-                TSH {salesStats?.average_sale_value?.toLocaleString() || '0'}
+                TSH {parseFloat(salesStats?.average_sale_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
               <p className="text-sm text-neutral-600 mt-2">
                 Per transaction
@@ -128,7 +128,7 @@ const ReportsPage = () => {
             <div>
               <p className="text-sm text-neutral-600 mb-1">Total Customers</p>
               <h3 className="text-2xl font-bold text-neutral-800">
-                {salesStats?.total_customers || 0}
+                {(salesStats?.total_customers || 0).toLocaleString()}
               </h3>
               <p className="text-sm text-neutral-600 mt-2">
                 Unique buyers
@@ -147,16 +147,28 @@ const ReportsPage = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={salesChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-              <XAxis dataKey="date" stroke="#737373" />
-              <YAxis stroke="#737373" />
-              <Tooltip formatter={(value) => `TSH ${value.toLocaleString()}`} />
-              <Legend />
+              <XAxis 
+                dataKey="date" 
+                stroke="#737373" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#737373" tick={{ fontSize: 12 }} />
+              <Tooltip 
+                formatter={(value) => `TSH ${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px' }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
               <Line 
                 type="monotone" 
                 dataKey="total" 
                 stroke="#0284c7" 
                 strokeWidth={2} 
-                name="Revenue (TSH)" 
+                name="Revenue (TSH)"
+                dot={{ fill: '#0284c7', r: 4 }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -166,10 +178,24 @@ const ReportsPage = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={salesChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-              <XAxis dataKey="date" stroke="#737373" />
-              <YAxis stroke="#737373" />
-              <Tooltip />
-              <Bar dataKey="count" fill="#22c55e" radius={[8, 8, 0, 0]} name="Sales Count" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#737373" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#737373" tick={{ fontSize: 12 }} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px' }}
+              />
+              <Bar 
+                dataKey="count" 
+                fill="#22c55e" 
+                radius={[8, 8, 0, 0]} 
+                name="Sales Count" 
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -183,7 +209,7 @@ const ReportsPage = () => {
               <div key={method} className="p-4 bg-neutral-50 rounded-lg">
                 <h4 className="font-semibold text-neutral-800 capitalize mb-2">{method}</h4>
                 <p className="text-2xl font-bold text-primary-600">
-                  TSH {data.total?.toLocaleString() || '0'}
+                  TSH {parseFloat(data.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-sm text-neutral-600 mt-1">
                   {data.count || 0} transactions

@@ -174,20 +174,51 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
+        from datetime import timedelta
         today = datetime.now().date()
         
-        # Today's sales
-        today_sales = self.queryset.filter(created_at__date=today, status='completed')
-        today_total = today_sales.aggregate(Sum('total'))['total__sum'] or 0
+        # Calculate date range based on days parameter (default 30)
+        days = int(request.query_params.get('days', 30))
+        start_date = today - timedelta(days=days)
         
-        # Total sales
-        total_sales = self.queryset.filter(status='completed').aggregate(Sum('total'))['total__sum'] or 0
+        # Filter completed sales within date range
+        sales = self.queryset.filter(
+            status='completed', 
+            created_at__date__gte=start_date,
+            created_at__date__lte=today
+        )
         
-        # Total transactions
-        total_transactions = self.queryset.filter(status='completed').count()
+        # Calculate statistics
+        stats = sales.aggregate(
+            total_revenue=Sum('total'),
+            total_sales=Count('id')
+        )
+        
+        total_revenue = stats['total_revenue'] or 0
+        total_sales = stats['total_sales'] or 0
+        
+        # Calculate average sale value
+        average_sale_value = total_revenue / total_sales if total_sales > 0 else 0
+        
+        # Count unique customers
+        total_customers = sales.values('customer').distinct().count()
+        
+        # Payment methods breakdown
+        payment_methods = {}
+        for method in ['cash', 'card', 'mobile']:
+            method_sales = sales.filter(payment_method=method).aggregate(
+                total=Sum('total'),
+                count=Count('id')
+            )
+            payment_methods[method] = {
+                'total': method_sales['total'] or 0,
+                'count': method_sales['count'] or 0
+            }
         
         return Response({
-            'today_sales': today_total,
+            'total_revenue': float(total_revenue),
             'total_sales': total_sales,
-            'total_transactions': total_transactions
+            'average_sale_value': float(average_sale_value),
+            'total_customers': total_customers,
+            'payment_methods': payment_methods
         })

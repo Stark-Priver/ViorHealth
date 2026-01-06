@@ -62,17 +62,27 @@ def sales_chart(request):
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days)
     
+    # Get sales data grouped by date
     sales_data = Sale.objects.filter(
         created_at__date__range=[start_date, end_date],
         status='completed'
     ).annotate(
         date=TruncDate('created_at')
     ).values('date').annotate(
-        revenue=Sum('total'),
-        transactions=Count('id')
+        total=Sum('total'),
+        count=Count('id')
     ).order_by('date')
     
-    return Response(list(sales_data))
+    # Convert to list and format dates
+    result = []
+    for item in sales_data:
+        result.append({
+            'date': item['date'].strftime('%Y-%m-%d'),
+            'total': float(item['total'] or 0),
+            'count': item['count']
+        })
+    
+    return Response(result)
 
 
 @api_view(['GET'])

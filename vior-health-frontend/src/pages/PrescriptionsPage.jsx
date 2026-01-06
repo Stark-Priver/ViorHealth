@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Clock, CheckCircle, XCircle, User, Eye } from 'lucide-react';
 import { prescriptionsAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/common/Modal';
-import PrescriptionForm from '../components/prescriptions/PrescriptionForm';
 
 const PrescriptionsPage = () => {
+  const navigate = useNavigate();
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const { hasRole } = useAuth();
@@ -76,11 +76,6 @@ const PrescriptionsPage = () => {
     setShowDetailsModal(true);
   };
 
-  const handleCreatePrescription = () => {
-    setShowCreateModal(false);
-    fetchPrescriptions();
-  };
-
   const filteredPrescriptions = prescriptions.filter(prescription => {
     const matchesSearch = prescription.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          prescription.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -120,7 +115,7 @@ const PrescriptionsPage = () => {
         </div>
         {hasRole(['admin', 'pharmacist']) && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => navigate('/prescriptions/create')}
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
           >
             <Plus className="w-5 h-5" />
@@ -279,19 +274,6 @@ const PrescriptionsPage = () => {
           </div>
         </div>
       )}
-
-      {/* Create Prescription Modal */}
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Create New Prescription"
-        size="xl"
-      >
-        <PrescriptionForm
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleCreatePrescription}
-        />
-      </Modal>
 
       {/* Prescription Details Modal */}
       <Modal

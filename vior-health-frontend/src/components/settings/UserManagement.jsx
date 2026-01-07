@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Mail, Phone, UserCircle } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { formatRole } from '../../utils/formatters';
 
 const UserManagement = () => {
   const { user: currentUser } = useAuth();
@@ -182,7 +183,7 @@ const UserManagement = () => {
           <p className="font-semibold">Error loading users:</p>
           <p>{error}</p>
           {currentUser && (
-            <p className="text-sm mt-2">Your role: {currentUser.role}</p>
+            <p className="text-sm mt-2">Your role: {formatRole(currentUser.role)}</p>
           )}
         </div>
       )}
@@ -265,8 +266,8 @@ const UserManagement = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getRoleBadgeColor(user.role)}`}>
-                      {user.role}
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
+                      {formatRole(user.role)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -409,6 +410,7 @@ const UserManagement = () => {
                   >
                     <option value="cashier">Cashier</option>
                     <option value="pharmacist">Pharmacist</option>
+                    <option value="lab_technician">Lab Technician</option>
                     <option value="manager">Manager</option>
                     <option value="admin">Admin</option>
                   </select>

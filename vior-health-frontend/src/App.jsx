@@ -23,6 +23,11 @@ import CustomersPage from './pages/CustomersPage';
 import ProfilePage from './pages/ProfilePage';
 import ExpensesPage from './pages/ExpensesPage';
 import PharmacySettingsPage from './pages/PharmacySettingsPage';
+import LabTechnicianDashboardPage from './pages/LabTechnicianDashboardPage';
+import LaboratoryTestsPage from './pages/LaboratoryTestsPage';
+import LabTestDetailPage from './pages/LabTestDetailPage';
+import CreateLabTestPage from './pages/CreateLabTestPage';
+import TestTypesPage from './pages/TestTypesPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -216,6 +221,58 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <ProfilePage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Laboratory Routes - Lab Technicians and higher */}
+            <Route
+              path="/laboratory/dashboard"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <LabTechnicianDashboardPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/tests"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <LaboratoryTestsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/test-types"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <MainLayout>
+                    <TestTypesPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/tests/create"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CreateLabTestPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/tests/:id"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <LabTestDetailPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

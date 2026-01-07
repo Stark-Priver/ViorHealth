@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../hooks/useSidebar';
+import { formatRole } from '../../utils/formatters';
 import { toast } from 'react-toastify';
 import logo from '../../assets/logo.png';
 
@@ -26,16 +27,6 @@ const Navbar = () => {
   const handleSettingsClick = () => {
     setShowProfileMenu(false);
     navigate('/settings');
-  };
-
-  const getRoleDisplay = (role) => {
-    const roleMap = {
-      admin: 'Administrator',
-      manager: 'Manager',
-      pharmacist: 'Pharmacist',
-      cashier: 'Cashier',
-    };
-    return roleMap[role] || role;
   };
 
   return (
@@ -85,7 +76,7 @@ const Navbar = () => {
                     ? `${user.first_name} ${user.last_name}`
                     : user?.username || 'User'}
                 </p>
-                <p className="text-xs text-neutral-500">{getRoleDisplay(user?.role)}</p>
+                <p className="text-xs text-neutral-500">{formatRole(user?.role)}</p>
               </div>
             </button>
 
@@ -95,7 +86,7 @@ const Navbar = () => {
                   <p className="text-xs text-neutral-500">Signed in as</p>
                   <p className="text-sm font-semibold text-neutral-800">{user?.username}</p>
                 </div>
-                <button 
+                <button formatRole
                   onClick={handleProfileClick}
                   className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 flex items-center gap-2"
                 >

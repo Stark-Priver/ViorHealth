@@ -22,9 +22,10 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        # Only admins and managers can list, create, update, delete users
-        if self.action in ['list', 'create', 'update', 'partial_update', 'destroy']:
+        # Only admins and managers can create, update, delete users
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminOrManager()]
+        # List is available to authenticated users (for dropdowns, etc.)
         return super().get_permissions()
 
     @action(detail=False, methods=['get', 'put', 'patch'])

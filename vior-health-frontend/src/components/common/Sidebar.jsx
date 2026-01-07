@@ -15,11 +15,16 @@ import {
   ChevronDown,
   Store,
   DollarSign,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Microscope,
+  ClipboardList,
+  Activity,
+  TestTube
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../hooks/useSidebar';
+import { formatRole } from '../../utils/formatters';
 import logo from '../../assets/logo.png';
 import { useEffect, useState } from 'react';
 
@@ -30,6 +35,7 @@ const Sidebar = () => {
     dashboard: true,
     sales: true,
     inventory: true,
+    laboratory: true,
     financial: true,
     management: true
   });
@@ -65,6 +71,12 @@ const Sidebar = () => {
           label: 'Dashboard', 
           path: '/dashboard',
           roles: ['admin', 'manager', 'pharmacist', 'cashier']
+        },
+        { 
+          icon: Microscope, 
+          label: 'Lab Dashboard', 
+          path: '/laboratory/dashboard',
+          roles: ['lab_technician']
         }
       ]
     },
@@ -109,6 +121,31 @@ const Sidebar = () => {
           label: 'Suppliers', 
           path: '/suppliers',
           roles: ['admin', 'manager']
+        }
+      ]
+    },
+    {
+      id: 'laboratory',
+      label: 'Laboratory',
+      icon: Microscope,
+      items: [
+        { 
+          icon: ClipboardList, 
+          label: 'Lab Tests', 
+          path: '/laboratory/tests',
+          roles: ['admin', 'manager', 'pharmacist', 'lab_technician']
+        },
+        { 
+          icon: TestTube, 
+          label: 'Test Types', 
+          path: '/laboratory/test-types',
+          roles: ['admin', 'manager']
+        },
+        { 
+          icon: Activity, 
+          label: 'Measurements', 
+          path: '/laboratory/tests?status=in_progress',
+          roles: ['lab_technician']
         }
       ]
     },
@@ -307,7 +344,7 @@ const Sidebar = () => {
         {user && !isCollapsed && (
           <div className="p-3 mx-3 mb-3 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg border border-primary-200 flex-shrink-0">
             <p className="text-xs text-neutral-600 mb-0.5">Current Role</p>
-            <p className="text-sm font-semibold text-primary-700 capitalize truncate">{user.role}</p>
+            <p className="text-sm font-semibold text-primary-700 truncate">{formatRole(user.role)}</p>
           </div>
         )}
 

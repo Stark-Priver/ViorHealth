@@ -7,6 +7,7 @@ class User(AbstractUser):
         ('manager', 'Manager'),
         ('pharmacist', 'Pharmacist'),
         ('cashier', 'Cashier'),
+        ('lab_technician', 'Lab Technician'),
     )
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='cashier')

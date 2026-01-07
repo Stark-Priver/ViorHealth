@@ -35,8 +35,9 @@ const Button = ({
     // Icon is a component reference
     iconElement = <Icon className="w-4 h-4" />;
   } else if (icon) {
-    // icon is already a JSX element or component reference
-    iconElement = typeof icon === 'function' ? icon({ className: 'w-4 h-4' }) : icon;
+    // icon is a component reference
+    const IconComponent = icon;
+    iconElement = <IconComponent className="w-4 h-4" />;
   }
 
   return (

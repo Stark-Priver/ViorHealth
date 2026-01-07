@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'prescriptions',
     'analytics',
     'expenses',
+    'laboratory',
 ]
 
 MIDDLEWARE = [

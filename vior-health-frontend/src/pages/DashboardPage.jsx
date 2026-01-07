@@ -1,4 +1,6 @@
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import DashboardStats from '../components/dashboard/DashboardStats';
 import SalesChart from '../components/dashboard/SalesChart';
 import RecentActivity from '../components/dashboard/RecentActivity';
@@ -9,7 +11,15 @@ import ManagerDashboard from '../components/dashboard/ManagerDashboard';
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userRole = user?.role || 'cashier';
+
+  // Redirect lab technicians to their specific dashboard
+  useEffect(() => {
+    if (userRole === 'lab_technician') {
+      navigate('/laboratory/dashboard');
+    }
+  }, [userRole, navigate]);
 
   // Render role-based dashboard
   const renderDashboard = () => {

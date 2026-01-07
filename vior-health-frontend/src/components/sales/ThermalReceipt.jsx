@@ -6,9 +6,11 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
   const printRef = useRef();
 
   useEffect(() => {
+    console.log('ThermalReceipt - Pharmacy Settings:', pharmacySettings);
+    console.log('ThermalReceipt - Sale:', sale);
     // Auto print when component mounts (optional)
     // handlePrint();
-  }, []);
+  }, [pharmacySettings, sale]);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -368,7 +370,9 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `${pharmacySettings?.currency_symbol || '$'}${parseFloat(amount).toFixed(2)}`;
+    const symbol = pharmacySettings?.currency_symbol || 'TSH';
+    const value = parseFloat(amount).toFixed(2);
+    return `${symbol} ${value}`;
   };
 
   const formatDate = (dateString) => {
@@ -408,15 +412,34 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
               
               {/* Header */}
               <div className="header">
-                <div className="pharmacy-name">{pharmacySettings?.pharmacy_name || 'PHARMACY'}</div>
+                <div className="pharmacy-name">{pharmacySettings?.pharmacy_name || 'VIOR HEALTH PHARMACY'}</div>
                 <div className="header-info">
-                  {pharmacySettings?.address_line1 && <div>{pharmacySettings.address_line1}</div>}
-                  {pharmacySettings?.city && pharmacySettings?.state_province && (
-                    <div>{pharmacySettings.city}, {pharmacySettings.state_province} {pharmacySettings.postal_code}</div>
+                  {pharmacySettings?.business_registration_number && (
+                    <div><strong>Reg No:</strong> {pharmacySettings.business_registration_number}</div>
                   )}
-                  {pharmacySettings?.phone && <div>Tel: {pharmacySettings.phone}</div>}
-                  {pharmacySettings?.email && <div>{pharmacySettings.email}</div>}
-                  {pharmacySettings?.tax_id && <div>TIN: {pharmacySettings.tax_id}</div>}
+                  {pharmacySettings?.tax_id && (
+                    <div><strong>TIN:</strong> {pharmacySettings.tax_id}</div>
+                  )}
+                  {pharmacySettings?.address_line1 && <div>{pharmacySettings.address_line1}</div>}
+                  {pharmacySettings?.address_line2 && <div>{pharmacySettings.address_line2}</div>}
+                  {(pharmacySettings?.city || pharmacySettings?.state_province) && (
+                    <div>
+                      {pharmacySettings.city}
+                      {pharmacySettings.city && pharmacySettings.state_province && ', '}
+                      {pharmacySettings.state_province} {pharmacySettings.postal_code}
+                    </div>
+                  )}
+                  {pharmacySettings?.country && <div>{pharmacySettings.country}</div>}
+                  <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #ddd' }}></div>
+                  {pharmacySettings?.phone && (
+                    <div><strong>Phone:</strong> {pharmacySettings.phone}</div>
+                  )}
+                  {pharmacySettings?.email && (
+                    <div><strong>Email:</strong> {pharmacySettings.email}</div>
+                  )}
+                  {pharmacySettings?.website && (
+                    <div><strong>Web:</strong> {pharmacySettings.website}</div>
+                  )}
                 </div>
               </div>
 
@@ -513,7 +536,7 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* Notes Section */}
               {sale.notes && (
                 <div className="notes-box">
                   <div className="notes-title">Special Notes</div>

@@ -34,10 +34,12 @@ const SalesHistory = () => {
 
   const fetchPharmacySettings = async () => {
     try {
-      const response = await getPharmacySettings();
-      setPharmacySettings(response.data);
+      const data = await getPharmacySettings();
+      console.log('Pharmacy settings loaded:', data);
+      setPharmacySettings(data);
     } catch (error) {
       console.error('Error fetching pharmacy settings:', error);
+      toast.error('Failed to load pharmacy settings');
     }
   };
 

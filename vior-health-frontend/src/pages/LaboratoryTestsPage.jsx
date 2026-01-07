@@ -5,6 +5,7 @@ import Table from '../components/common/Table';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
+import Breadcrumb from '../components/common/Breadcrumb';
 import { laboratoryAPI } from '../services/laboratory';
 import { Search, Filter, Plus, Eye, Play, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -97,8 +98,8 @@ const LaboratoryTestsPage = () => {
       cell: (row) => (
         <div>
           <div className="font-medium text-neutral-900">{row.test_name}</div>
-          <div className="text-sm text-neutral-500 capitalize">
-            {row.test_type.replace('_', ' ')}
+          <div className="text-sm text-neutral-500">
+            {row.test_type_name || 'N/A'}
           </div>
         </div>
       ),
@@ -160,6 +161,8 @@ const LaboratoryTestsPage = () => {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb />
+      
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

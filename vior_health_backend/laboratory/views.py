@@ -90,6 +90,18 @@ class LabTestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(requested_by=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        """Override create to return full serialized data"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        # Use the detail serializer for the response
+        instance = serializer.instance
+        output_serializer = LabTestSerializer(instance)
+        headers = self.get_success_headers(output_serializer.data)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
     @action(detail=True, methods=['post'])
     def start_test(self, request, pk=None):
         """Start working on a test"""
@@ -124,7 +136,27 @@ class LabTestViewSet(viewsets.ModelViewSet):
         lab_test.status = 'completed'
         lab_test.completed_at = timezone.now()
         lab_test.results = request.data.get('results', lab_test.results)
+        lab_test.diagnosis = request.data.get('diagnosis', lab_test.diagnosis)
         lab_test.notes = request.data.get('notes', lab_test.notes)
+        lab_test.save()
+        
+        serializer = self.get_serializer(lab_test)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def mark_as_paid(self, request, pk=None):
+        """Mark test as paid"""
+        lab_test = self.get_object()
+        
+        if lab_test.paid:
+            return Response(
+                {'error': 'Test is already marked as paid'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        lab_test.paid = True
+        lab_test.paid_at = timezone.now()
+        lab_test.payment_method = request.data.get('payment_method', 'cash')
         lab_test.save()
         
         serializer = self.get_serializer(lab_test)
@@ -193,8 +225,12 @@ class LabMeasurementViewSet(viewsets.ModelViewSet):
         
         # Filter by lab test if provided
         lab_test_id = self.request.query_params.get('lab_test')
-        if lab_test_id:
-            queryset = queryset.filter(lab_test_id=lab_test_id)
+        if lab_test_id and lab_test_id != 'undefined':
+            try:
+                queryset = queryset.filter(lab_test_id=int(lab_test_id))
+            except (ValueError, TypeError):
+                # Invalid ID format, return empty queryset
+                return queryset.none()
         
         return queryset
     

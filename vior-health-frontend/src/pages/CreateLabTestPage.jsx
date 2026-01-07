@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import Breadcrumb from '../components/common/Breadcrumb';
 import { laboratoryAPI } from '../services/laboratory';
 import { authAPI } from '../services/api';
+import api from '../services/api';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -12,22 +14,26 @@ const CreateLabTestPage = () => {
   const [loading, setLoading] = useState(false);
   const [labTechnicians, setLabTechnicians] = useState([]);
   const [testTypes, setTestTypes] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [formData, setFormData] = useState({
     test_type: '',
     test_name: '',
     description: '',
+    customer: '',
     patient_name: '',
     patient_age: '',
     patient_gender: '',
     patient_phone: '',
     cost: '',
     paid: false,
+    payment_method: 'cash',
     assigned_to: ''
   });
 
   useEffect(() => {
     fetchLabTechnicians();
     fetchTestTypes();
+    fetchCustomers();
   }, []);
 
   const fetchLabTechnicians = async () => {
@@ -49,6 +55,36 @@ const CreateLabTestPage = () => {
     } catch (error) {
       console.error('Error fetching test types:', error);
       toast.error('Failed to load test types');
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/sales/customers/');
+      const customerList = Array.isArray(response.data) ? response.data : response.data.results || [];
+      setCustomers(customerList);
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error('Failed to load customers');
+    }
+  };
+
+  const handleCustomerChange = (e) => {
+    const customerId = e.target.value;
+    const selectedCustomer = customers.find(c => c.id === parseInt(customerId));
+    
+    if (selectedCustomer) {
+      setFormData(prev => ({
+        ...prev,
+        customer: customerId,
+        patient_name: selectedCustomer.name,
+        patient_phone: selectedCustomer.phone
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        customer: '',
+      }));
     }
   };
 
@@ -88,11 +124,23 @@ const CreateLabTestPage = () => {
         patient_age: formData.patient_age ? parseInt(formData.patient_age) : null,
         cost: parseFloat(formData.cost)
       });
+      
+      console.log('Create test response:', response.data);
+      
+      const testId = response.data?.id;
+      if (!testId) {
+        console.error('No ID in response:', response.data);
+        toast.error('Test created but unable to navigate to details');
+        navigate('/laboratory/tests');
+        return;
+      }
+      
       toast.success('Lab test created successfully');
-      navigate(`/laboratory/tests/${response.data.id}`);
+      navigate(`/laboratory/tests/${testId}`);
     } catch (error) {
       console.error('Error creating lab test:', error);
-      toast.error('Failed to create lab test');
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Failed to create lab test');
     } finally {
       setLoading(false);
     }
@@ -108,6 +156,8 @@ const CreateLabTestPage = () => {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb />
+      
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -216,6 +266,25 @@ const CreateLabTestPage = () => {
                   </div>
                 </div>
 
+                {formData.paid && (
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                      Payment Method
+                    </label>
+                    <select
+                      name="payment_method"
+                      value={formData.payment_method}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="mobile">Mobile Money</option>
+                      <option value="insurance">Insurance</option>
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Assign to Lab Technician
@@ -241,6 +310,26 @@ const CreateLabTestPage = () => {
             <div>
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">Patient Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    Select Customer (Optional)
+                  </label>
+                  <select
+                    name="customer"
+                    value={formData.customer}
+                    onChange={handleCustomerChange}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select from existing customers or enter manually below</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name} - {customer.phone}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-neutral-500 mt-1">Selecting a customer will auto-fill name and phone</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Patient Name *

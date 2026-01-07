@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from sales.models import Customer
 
 
 class TestType(models.Model):
@@ -53,6 +54,14 @@ class LabTest(models.Model):
     description = models.TextField(blank=True, null=True)
     
     # Patient Information
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lab_tests',
+        help_text="Customer who is taking the test"
+    )
     patient_name = models.CharField(max_length=255)
     patient_age = models.IntegerField(null=True, blank=True)
     patient_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), blank=True)
@@ -61,6 +70,19 @@ class LabTest(models.Model):
     # Cost Information
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Cost of the lab test")
     paid = models.BooleanField(default=False, help_text="Payment status")
+    paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was made")
+    payment_method = models.CharField(
+        max_length=20, 
+        choices=(
+            ('cash', 'Cash'),
+            ('card', 'Card'),
+            ('mobile', 'Mobile Money'),
+            ('insurance', 'Insurance'),
+        ),
+        blank=True,
+        null=True,
+        help_text="Method of payment"
+    )
     
     # Request Information
     requested_by = models.ForeignKey(

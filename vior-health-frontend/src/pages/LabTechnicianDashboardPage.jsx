@@ -251,8 +251,8 @@ const LabTechnicianDashboardPage = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-medium text-neutral-900">{test.test_name}</div>
-                      <div className="text-sm text-neutral-500 capitalize">
-                        {test.test_type.replace('_', ' ')}
+                      <div className="text-sm text-neutral-500">
+                        {test.test_type_name || 'N/A'}
                       </div>
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(test.status)}</td>

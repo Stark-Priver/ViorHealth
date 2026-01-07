@@ -21,6 +21,11 @@ const Breadcrumb = () => {
     settings: 'Settings',
     'pharmacy-settings': 'Pharmacy Settings',
     profile: 'Profile',
+    laboratory: 'Laboratory',
+    tests: 'Lab Tests',
+    'test-types': 'Test Types',
+    measurements: 'Measurements',
+    'create-test': 'Create Test',
   };
 
   if (pathnames.length === 0) {

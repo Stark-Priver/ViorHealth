@@ -4,6 +4,7 @@ import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
+import Breadcrumb from '../components/common/Breadcrumb';
 import { laboratoryAPI } from '../services/laboratory';
 import { 
   ArrowLeft, 
@@ -14,7 +15,8 @@ import {
   Trash2,
   User,
   Calendar,
-  Phone
+  Phone,
+  DollarSign
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -26,6 +28,8 @@ const LabTestDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAddMeasurement, setShowAddMeasurement] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [completionData, setCompletionData] = useState({
     results: '',
     diagnosis: '',
@@ -41,10 +45,18 @@ const LabTestDetailPage = () => {
   });
 
   useEffect(() => {
-    fetchTestDetails();
+    if (id && id !== 'undefined') {
+      fetchTestDetails();
+    }
   }, [id]);
 
   const fetchTestDetails = async () => {
+    if (!id || id === 'undefined') {
+      toast.error('Invalid test ID');
+      navigate('/laboratory/tests');
+      return;
+    }
+    
     try {
       setLoading(true);
       const [testResponse, measurementsResponse] = await Promise.all([
@@ -60,6 +72,7 @@ const LabTestDetailPage = () => {
     } catch (error) {
       console.error('Error fetching test details:', error);
       toast.error('Failed to load test details');
+      navigate('/laboratory/tests');
     } finally {
       setLoading(false);
     }
@@ -113,6 +126,18 @@ const LabTestDetailPage = () => {
     }
   };
 
+  const handleMarkAsPaid = async () => {
+    try {
+      await laboratoryAPI.markAsPaid(id, paymentMethod);
+      toast.success('Test marked as paid');
+      setShowPaymentModal(false);
+      fetchTestDetails();
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      toast.error('Failed to mark test as paid');
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { variant: 'warning', label: 'Pending' },
@@ -142,6 +167,8 @@ const LabTestDetailPage = () => {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -159,6 +186,15 @@ const LabTestDetailPage = () => {
         </div>
         <div className="flex items-center gap-2">
           {getStatusBadge(test.status)}
+          {!test.paid && (
+            <Button
+              variant="success"
+              icon={DollarSign}
+              onClick={() => setShowPaymentModal(true)}
+            >
+              Mark as Paid
+            </Button>
+          )}
           {test.status === 'pending' && (
             <Button
               icon={Activity}
@@ -196,6 +232,15 @@ const LabTestDetailPage = () => {
             Patient Information
           </h2>
           <div className="space-y-3">
+            {test.customer_name && (
+              <div className="pb-3 mb-3 border-b border-neutral-200">
+                <label className="text-sm font-medium text-neutral-600">Customer</label>
+                <p className="text-neutral-900 font-semibold">{test.customer_name}</p>
+                {test.customer_phone && (
+                  <p className="text-sm text-neutral-600">{test.customer_phone}</p>
+                )}
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium text-neutral-600">Name</label>
               <p className="text-neutral-900 font-medium">{test.patient_name}</p>
@@ -230,7 +275,7 @@ const LabTestDetailPage = () => {
           <div className="space-y-3">
             <div>
               <label className="text-sm font-medium text-neutral-600">Test Type</label>
-              <p className="text-neutral-900 capitalize">{test.test_type.replace('_', ' ')}</p>
+              <p className="text-neutral-900">{test.test_type_name || 'N/A'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-600">Cost</label>
@@ -238,13 +283,21 @@ const LabTestDetailPage = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-600">Payment Status</label>
-              <div>
+              <div className="flex items-center gap-2">
                 {test.paid ? (
-                  <Badge variant="success">Paid</Badge>
+                  <>
+                    <Badge variant="success">Paid</Badge>
+                    {test.payment_method && (
+                      <span className="text-xs text-neutral-600">via {test.payment_method}</span>
+                    )}
+                  </>
                 ) : (
                   <Badge variant="warning">Unpaid</Badge>
                 )}
               </div>
+              {test.paid && test.paid_at && (
+                <p className="text-xs text-neutral-500 mt-1">Paid on {new Date(test.paid_at).toLocaleString()}</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-neutral-600">Requested By</label>
@@ -539,6 +592,68 @@ const LabTestDetailPage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <Modal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          title="Mark Test as Paid"
+        >
+          <div className="space-y-4">
+            <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-neutral-600">Test Number:</span>
+                <span className="text-neutral-900 font-semibold">{test.test_number}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-neutral-600">Amount:</span>
+                <span className="text-lg font-bold text-neutral-900">
+                  TSH {Number(test.cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
+                Payment Method *
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="mobile">Mobile Money</option>
+                <option value="insurance">Insurance</option>
+              </select>
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                This will mark the test as paid and record the payment time.
+              </p>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => setShowPaymentModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="success"
+                icon={DollarSign}
+                onClick={handleMarkAsPaid}
+              >
+                Confirm Payment
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -21,6 +21,7 @@ export const laboratoryAPI = {
   startTest: (id) => api.post(`${BASE_URL}/tests/${id}/start_test/`),
   completeTest: (id, data) => api.post(`${BASE_URL}/tests/${id}/complete_test/`, data),
   reviewTest: (id) => api.post(`${BASE_URL}/tests/${id}/review_test/`),
+  markAsPaid: (id, paymentMethod = 'cash') => api.post(`${BASE_URL}/tests/${id}/mark_as_paid/`, { payment_method: paymentMethod }),
   
   // Lab Test Stats
   getLabStats: () => api.get(`${BASE_URL}/tests/stats/`),

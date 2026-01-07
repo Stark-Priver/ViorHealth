@@ -44,6 +44,7 @@ const LaboratoryTestsPage = () => {
 
   useEffect(() => {
     fetchTests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTests = async () => {

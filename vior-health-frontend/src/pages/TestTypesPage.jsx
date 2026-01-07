@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Card from '../components/common/Card';
 import Table from '../components/common/Table';
 import Badge from '../components/common/Badge';
@@ -10,7 +9,6 @@ import { Plus, Edit, Trash2, TestTube, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const TestTypesPage = () => {
-  const navigate = useNavigate();
   const [testTypes, setTestTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

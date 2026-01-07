@@ -9,7 +9,6 @@ import { toast } from 'react-toastify';
 
 const POSPage = () => {
   const [products, setProducts] = useState([]);
-  const [labTests, setLabTests] = useState([]);
   const [testTypes, setTestTypes] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');

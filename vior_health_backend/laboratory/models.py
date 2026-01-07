@@ -67,6 +67,24 @@ class LabTest(models.Model):
     patient_gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), blank=True)
     patient_phone = models.CharField(max_length=20, blank=True)
     
+    # Relationships
+    prescription = models.ForeignKey(
+        'prescriptions.Prescription',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lab_tests',
+        help_text="Prescription this test is related to (if any)"
+    )
+    sale = models.ForeignKey(
+        'sales.Sale',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='lab_tests',
+        help_text="Sale transaction for this test (if paid at POS)"
+    )
+    
     # Cost Information
     cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Cost of the lab test")
     paid = models.BooleanField(default=False, help_text="Payment status")

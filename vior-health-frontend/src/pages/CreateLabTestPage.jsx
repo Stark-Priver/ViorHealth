@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import Breadcrumb from '../components/common/Breadcrumb';
 import { laboratoryAPI } from '../services/laboratory';
 import { authAPI } from '../services/api';
 import api from '../services/api';
@@ -15,11 +14,13 @@ const CreateLabTestPage = () => {
   const [labTechnicians, setLabTechnicians] = useState([]);
   const [testTypes, setTestTypes] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [formData, setFormData] = useState({
     test_type: '',
     test_name: '',
     description: '',
     customer: '',
+    prescription: '',
     patient_name: '',
     patient_age: '',
     patient_gender: '',
@@ -34,6 +35,7 @@ const CreateLabTestPage = () => {
     fetchLabTechnicians();
     fetchTestTypes();
     fetchCustomers();
+    fetchPrescriptions();
   }, []);
 
   const fetchLabTechnicians = async () => {
@@ -66,6 +68,18 @@ const CreateLabTestPage = () => {
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast.error('Failed to load customers');
+    }
+  };
+
+  const fetchPrescriptions = async () => {
+    try {
+      const response = await api.get('/prescriptions/prescriptions/');
+      const prescList = Array.isArray(response.data) ? response.data : response.data.results || [];
+      // Only show pending prescriptions
+      setPrescriptions(prescList.filter(p => p.status === 'pending'));
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+      toast.error('Failed to load prescriptions');
     }
   };
 
@@ -156,8 +170,6 @@ const CreateLabTestPage = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-      
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -310,6 +322,26 @@ const CreateLabTestPage = () => {
             <div>
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">Patient Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    Related Prescription (Optional)
+                  </label>
+                  <select
+                    name="prescription"
+                    value={formData.prescription}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">No prescription - standalone test</option>
+                    {prescriptions.map(prescription => (
+                      <option key={prescription.id} value={prescription.id}>
+                        {prescription.prescription_number} - {prescription.customer_name} ({prescription.diagnosis})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-neutral-500 mt-1">Link this test to an existing prescription if applicable</p>
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Select Customer (Optional)

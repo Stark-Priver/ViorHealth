@@ -35,6 +35,8 @@ class LabTestSerializer(serializers.ModelSerializer):
     test_type_code = serializers.CharField(source='test_type.code', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     customer_phone = serializers.CharField(source='customer.phone', read_only=True)
+    prescription_number = serializers.CharField(source='prescription.prescription_number', read_only=True)
+    sale_invoice = serializers.CharField(source='sale.invoice_number', read_only=True)
     
     class Meta:
         model = LabTest
@@ -43,6 +45,7 @@ class LabTestSerializer(serializers.ModelSerializer):
             'test_name', 'description',
             'customer', 'customer_name', 'customer_phone',
             'patient_name', 'patient_age', 'patient_gender', 'patient_phone',
+            'prescription', 'prescription_number', 'sale', 'sale_invoice',
             'cost', 'paid', 'paid_at', 'payment_method',
             'requested_by', 'requested_by_name', 'requested_at',
             'assigned_to', 'assigned_to_name',
@@ -60,6 +63,7 @@ class LabTestCreateSerializer(serializers.ModelSerializer):
         fields = [
             'test_type', 'test_name', 'description',
             'customer', 'patient_name', 'patient_age', 'patient_gender', 'patient_phone',
+            'prescription', 'sale',
             'cost', 'paid', 'payment_method',
             'assigned_to'
         ]

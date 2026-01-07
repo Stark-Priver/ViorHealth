@@ -15,6 +15,10 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     dispensed_by_name = serializers.CharField(source='dispensed_by.username', read_only=True, allow_null=True)
     created_by_name = serializers.CharField(source='created_by.username', read_only=True)
+    lab_tests_count = serializers.SerializerMethodField()
+
+    def get_lab_tests_count(self, obj):
+        return obj.lab_tests.count()
 
     class Meta:
         model = Prescription

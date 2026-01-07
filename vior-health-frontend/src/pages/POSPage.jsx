@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, ShoppingCart, X, DollarSign, CreditCard, Smartphone } from 'lucide-react';
+import { Search, Plus, Trash2, ShoppingCart, X, DollarSign, CreditCard, Smartphone, TestTube } from 'lucide-react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import { inventoryAPI, salesAPI } from '../services/api';
+import { laboratoryAPI } from '../services/laboratory';
 import { toast } from 'react-toastify';
 
 const POSPage = () => {
   const [products, setProducts] = useState([]);
+  const [labTests, setLabTests] = useState([]);
+  const [testTypes, setTestTypes] = useState([]);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [itemType, setItemType] = useState('all'); // all, products, tests
   const [loading, setLoading] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -20,6 +24,7 @@ const POSPage = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchTestTypes();
   }, []);
 
   const fetchProducts = async () => {
@@ -37,45 +42,76 @@ const POSPage = () => {
     }
   };
 
-  const addToCart = (product) => {
-    const existingItem = cart.find(item => item.id === product.id);
-    
-    if (existingItem) {
-      if (existingItem.quantity >= product.quantity) {
-        toast.warning('Cannot add more than available stock');
-        return;
-      }
-      setCart(cart.map(item =>
-        item.id === product.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+  const fetchTestTypes = async () => {
+    try {
+      const response = await laboratoryAPI.getTestTypes();
+      const data = Array.isArray(response.data) ? response.data : response.data.results || [];
+      // Only show active test types
+      setTestTypes(data.filter(t => t.is_active));
+    } catch (error) {
+      console.error('Error fetching test types:', error);
     }
-    toast.success(`${product.name} added to cart`);
   };
 
-  const updateQuantity = (productId, newQuantity) => {
-    const product = products.find(p => p.id === productId);
+  const addToCart = (item, type = 'product') => {
+    const existingItem = cart.find(cartItem => cartItem.id === item.id && cartItem.type === type);
+    
+    if (type === 'product') {
+      if (existingItem) {
+        if (existingItem.quantity >= item.quantity) {
+          toast.warning('Cannot add more than available stock');
+          return;
+        }
+        setCart(cart.map(cartItem =>
+          cartItem.id === item.id && cartItem.type === 'product'
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        ));
+      } else {
+        setCart([...cart, { ...item, quantity: 1, type: 'product' }]);
+      }
+      toast.success(`${item.name} added to cart`);
+    } else if (type === 'test') {
+      // Test types are always quantity 1 (one test per cart item)
+      if (existingItem) {
+        toast.info('Test already in cart');
+        return;
+      }
+      setCart([...cart, { ...item, quantity: 1, type: 'test', unit_price: item.cost }]);
+      toast.success(`${item.name} test added to cart`);
+    }
+  };
+
+  const updateQuantity = (itemId, itemType, newQuantity) => {
+    const item = itemType === 'product' 
+      ? products.find(p => p.id === itemId)
+      : testTypes.find(t => t.id === itemId);
     
     if (newQuantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemId, itemType);
       return;
     }
     
-    if (newQuantity > product.quantity) {
+    // Tests are always quantity 1
+    if (itemType === 'test' && newQuantity !== 1) {
+      toast.info('Lab tests are single quantity items');
+      return;
+    }
+    
+    if (itemType === 'product' && newQuantity > item.quantity) {
       toast.warning('Cannot exceed available stock');
       return;
     }
     
-    setCart(cart.map(item =>
-      item.id === productId ? { ...item, quantity: newQuantity } : item
+    setCart(cart.map(cartItem =>
+      cartItem.id === itemId && cartItem.type === itemType 
+        ? { ...cartItem, quantity: newQuantity } 
+        : cartItem
     ));
   };
 
-  const removeFromCart = (productId) => {
-    setCart(cart.filter(item => item.id !== productId));
+  const removeFromCart = (itemId, itemType) => {
+    setCart(cart.filter(item => !(item.id === itemId && item.type === itemType)));
   };
 
   const calculateSubtotal = () => {
@@ -108,8 +144,12 @@ const POSPage = () => {
     }
 
     try {
+      // Separate products and tests from cart
+      const productItems = cart.filter(item => item.type === 'product');
+      const testItems = cart.filter(item => item.type === 'test');
+
       const saleData = {
-        items: cart.map(item => ({
+        items: productItems.map(item => ({
           product: item.id,
           quantity: parseInt(item.quantity),
           unit_price: parseFloat(item.unit_price),
@@ -126,7 +166,30 @@ const POSPage = () => {
       const response = await salesAPI.createSale(saleData);
       
       if (response.data) {
-        toast.success('Sale completed successfully!');
+        const saleId = response.data.id;
+        
+        // Create lab tests linked to this sale
+        if (testItems.length > 0) {
+          for (const test of testItems) {
+            try {
+              await laboratoryAPI.createLabTest({
+                test_type: test.id,
+                test_name: test.name,
+                cost: parseFloat(test.cost),
+                paid: true,
+                payment_method: paymentMethod,
+                sale: saleId,
+                patient_name: 'Walk-in Customer', // Can be enhanced to ask for patient details
+                description: `Purchased at POS - Sale #${response.data.invoice_number}`
+              });
+            } catch (testError) {
+              console.error('Error creating lab test:', testError);
+              toast.warning(`Lab test ${test.name} couldn't be created automatically`);
+            }
+          }
+        }
+        
+        toast.success(`Sale completed successfully!${testItems.length > 0 ? ` ${testItems.length} lab test(s) created.` : ''}`);
         
         // Reset cart and form
         setCart([]);
@@ -156,6 +219,20 @@ const POSPage = () => {
     product.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredTests = testTypes.filter(test =>
+    test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    test.code?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getFilteredItems = () => {
+    if (itemType === 'products') return filteredProducts.map(p => ({ ...p, itemType: 'product' }));
+    if (itemType === 'tests') return filteredTests.map(t => ({ ...t, itemType: 'test' }));
+    return [
+      ...filteredProducts.map(p => ({ ...p, itemType: 'product' })),
+      ...filteredTests.map(t => ({ ...t, itemType: 'test' }))
+    ];
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -167,12 +244,47 @@ const POSPage = () => {
         {/* Products Section */}
         <div className="lg:col-span-2">
           <Card>
-            <div className="mb-4">
+            <div className="mb-4 space-y-3">
+              {/* Item Type Tabs */}
+              <div className="flex gap-2 border-b border-neutral-200">
+                <button
+                  onClick={() => setItemType('all')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    itemType === 'all'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  All Items
+                </button>
+                <button
+                  onClick={() => setItemType('products')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    itemType === 'products'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  Products
+                </button>
+                <button
+                  onClick={() => setItemType('tests')}
+                  className={`px-4 py-2 font-medium transition-colors flex items-center gap-1 ${
+                    itemType === 'tests'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  <TestTube className="w-4 h-4" />
+                  Lab Tests
+                </button>
+              </div>
+              
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder={itemType === 'tests' ? 'Search lab tests...' : 'Search items...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -184,28 +296,35 @@ const POSPage = () => {
               {loading ? (
                 <div className="col-span-full text-center py-8">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                  <p className="mt-4 text-neutral-600">Loading products...</p>
+                  <p className="mt-4 text-neutral-600">Loading items...</p>
                 </div>
-              ) : filteredProducts.length === 0 ? (
+              ) : getFilteredItems().length === 0 ? (
                 <div className="col-span-full text-center py-8">
-                  <p className="text-neutral-600">No products found</p>
+                  <p className="text-neutral-600">No items found</p>
                 </div>
               ) : (
-                filteredProducts.map((product) => (
+                getFilteredItems().map((item) => (
                   <div
-                    key={product.id}
+                    key={`${item.itemType}-${item.id}`}
                     className="border border-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => addToCart(product)}
+                    onClick={() => addToCart(item, item.itemType)}
                   >
-                    <h3 className="font-semibold text-neutral-800 mb-1 truncate">{product.name}</h3>
-                    <p className="text-sm text-neutral-600 mb-2">{product.category?.name || 'General'}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-neutral-800 truncate">{item.name}</h3>
+                      {item.itemType === 'test' && <TestTube className="w-4 h-4 text-blue-600 flex-shrink-0" />}
+                    </div>
+                    <p className="text-sm text-neutral-600 mb-2">
+                      {item.itemType === 'product' ? (item.category?.name || 'General') : item.code}
+                    </p>
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-primary-600">
-                        TZS {parseFloat(product.unit_price || 0).toLocaleString()}
+                        TZS {parseFloat(item.itemType === 'product' ? item.unit_price : item.cost || 0).toLocaleString()}
                       </span>
-                      <span className="text-sm text-neutral-500">
-                        Stock: {product.quantity}
-                      </span>
+                      {item.itemType === 'product' && (
+                        <span className="text-sm text-neutral-500">
+                          Stock: {item.quantity}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
@@ -231,27 +350,36 @@ const POSPage = () => {
               <>
                 <div className="space-y-3 mb-4 max-h-[300px] overflow-y-auto">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
+                    <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-neutral-800 truncate">{item.name}</p>
+                        <div className="flex items-center gap-1 mb-1">
+                          <p className="font-medium text-neutral-800 truncate">{item.name}</p>
+                          {item.type === 'test' && <TestTube className="w-3 h-3 text-blue-600 flex-shrink-0" />}
+                        </div>
                         <p className="text-sm text-neutral-600">TZS {parseFloat(item.unit_price || 0).toLocaleString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
+                        {item.type === 'product' ? (
+                          <>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.type, item.quantity - 1)}
+                              className="w-8 h-8 flex items-center justify-center bg-white border border-neutral-300 rounded hover:bg-neutral-100"
+                            >
+                              -
+                            </button>
+                            <span className="w-8 text-center font-medium">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.type, item.quantity + 1)}
+                              className="w-8 h-8 flex items-center justify-center bg-white border border-neutral-300 rounded hover:bg-neutral-100"
+                            >
+                              +
+                            </button>
+                          </>
+                        ) : (
+                          <span className="w-20 text-center font-medium px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm">1 Test</span>
+                        )}
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-8 h-8 flex items-center justify-center bg-white border border-neutral-300 rounded hover:bg-neutral-100"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center bg-white border border-neutral-300 rounded hover:bg-neutral-100"
-                        >
-                          +
-                        </button>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.id, item.type)}
                           className="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-50 rounded"
                         >
                           <Trash2 className="w-4 h-4" />

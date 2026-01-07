@@ -205,7 +205,7 @@ const SalesHistory = () => {
   });
 
   return (
-    <div>
+    <div className="max-w-full overflow-x-hidden">
       <Card className="mb-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -224,35 +224,35 @@ const SalesHistory = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">Today's Sales</p>
-          <p className="text-2xl font-bold text-neutral-800">
+          <p className="text-xl lg:text-2xl font-bold text-neutral-800 break-words">
             TSH {parseFloat(stats.today).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">This Week</p>
-          <p className="text-2xl font-bold text-neutral-800">
+          <p className="text-xl lg:text-2xl font-bold text-neutral-800 break-words">
             TSH {parseFloat(stats.week).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">This Month</p>
-          <p className="text-2xl font-bold text-neutral-800">
+          <p className="text-xl lg:text-2xl font-bold text-neutral-800 break-words">
             TSH {parseFloat(stats.month).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-neutral-200">
           <p className="text-xs text-neutral-600 mb-1">Avg. Transaction</p>
-          <p className="text-2xl font-bold text-neutral-800">
+          <p className="text-xl lg:text-2xl font-bold text-neutral-800 break-words">
             TSH {parseFloat(stats.average).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-neutral-500 mt-1">Last 30 days</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="overflow-x-auto">
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -263,7 +263,9 @@ const SalesHistory = () => {
             <p>No sales found</p>
           </div>
         ) : (
-          <Table columns={columns} data={filteredSales} />
+          <div className="min-w-full">
+            <Table columns={columns} data={filteredSales} />
+          </div>
         )}
       </Card>
 

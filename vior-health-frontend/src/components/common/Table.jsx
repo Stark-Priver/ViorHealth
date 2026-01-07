@@ -2,14 +2,14 @@ import clsx from 'clsx';
 
 const Table = ({ columns, data, onRowClick }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="w-full">
+      <table className="w-full table-fixed">
         <thead className="bg-neutral-50 border-b border-neutral-200">
           <tr>
             {columns.map((column, index) => (
               <th
                 key={index}
-                className="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider"
+                className="px-2 py-2 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider"
               >
                 {column.header}
               </th>
@@ -29,7 +29,7 @@ const Table = ({ columns, data, onRowClick }) => {
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-neutral-800"
+                  className="px-2 py-2 text-sm text-neutral-800"
                 >
                   {column.render ? column.render(row) : row[column.accessor]}
                 </td>

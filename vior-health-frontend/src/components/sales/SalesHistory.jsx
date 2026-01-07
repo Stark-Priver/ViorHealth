@@ -110,51 +110,55 @@ const SalesHistory = () => {
 
   const columns = [
     {
-      header: 'Invoice No.',
+      header: 'Invoice',
       accessor: 'invoice_number',
       render: (row) => (
-        <span className="font-semibold text-primary-600">{row.invoice_number || `INV-${row.id}`}</span>
+        <span className="font-semibold text-primary-600 text-xs">{row.invoice_number || `INV-${row.id}`}</span>
       ),
     },
     {
       header: 'Customer',
       accessor: 'customer',
-      render: (row) => row.customer?.name || row.customer_name || 'Walk-in Customer',
+      render: (row) => (
+        <span className="text-xs truncate max-w-[100px] block" title={row.customer?.name || row.customer_name || 'Walk-in'}>
+          {row.customer?.name || row.customer_name || 'Walk-in'}
+        </span>
+      ),
     },
     {
-      header: 'Date & Time',
+      header: 'Date',
       accessor: 'created_at',
       render: (row) => {
         const { date, time } = formatDateTime(row.created_at);
         return (
-          <div>
+          <div className="text-xs">
             <p className="text-neutral-800">{date}</p>
-            <p className="text-xs text-neutral-500">{time}</p>
+            <p className="text-neutral-500">{time}</p>
           </div>
         );
       },
     },
     {
-      header: 'Items',
+      header: 'Qty',
       accessor: 'items',
       render: (row) => (
-        <span className="font-semibold">{row.items?.length || row.total_items || 0}</span>
+        <span className="font-semibold text-xs">{row.items?.length || row.total_items || 0}</span>
       ),
     },
     {
-      header: 'Amount',
+      header: 'Total',
       accessor: 'total',
       render: (row) => (
-        <span className="font-bold text-neutral-800">
-          TSH {parseFloat(row.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <span className="font-bold text-neutral-800 text-xs whitespace-nowrap">
+          {parseFloat(row.total || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
         </span>
       ),
     },
     {
-      header: 'Payment',
+      header: 'Pay',
       accessor: 'payment_method',
       render: (row) => (
-        <Badge variant="info" size="sm">{row.payment_method || 'Cash'}</Badge>
+        <span className="text-xs capitalize">{row.payment_method || 'Cash'}</span>
       ),
     },
     {
@@ -163,23 +167,24 @@ const SalesHistory = () => {
       render: (row) => (
         <Badge
           variant={row.status === 'completed' || row.status === 'Completed' ? 'success' : 'warning'}
+          size="sm"
         >
-          {row.status || 'Completed'}
+          {row.status || 'Done'}
         </Badge>
       ),
     },
     {
-      header: 'Actions',
+      header: '',
       accessor: 'actions',
       render: (row) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button 
             onClick={() => handleViewSale(row.id)}
             className="text-primary-600 hover:text-primary-700 p-1 hover:bg-primary-50 rounded transition-colors"
             disabled={loadingDetails}
             title="View Details"
           >
-            <Eye className="w-5 h-5" />
+            <Eye className="w-4 h-4" />
           </button>
           <button 
             onClick={() => handlePrintReceipt(row.id)}
@@ -187,7 +192,7 @@ const SalesHistory = () => {
             disabled={loadingDetails}
             title="Print Receipt"
           >
-            <Printer className="w-5 h-5" />
+            <Printer className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -252,7 +257,7 @@ const SalesHistory = () => {
         </div>
       </div>
 
-      <Card className="overflow-x-auto">
+      <Card className="overflow-hidden">
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -263,9 +268,7 @@ const SalesHistory = () => {
             <p>No sales found</p>
           </div>
         ) : (
-          <div className="min-w-full">
-            <Table columns={columns} data={filteredSales} />
-          </div>
+          <Table columns={columns} data={filteredSales} />
         )}
       </Card>
 

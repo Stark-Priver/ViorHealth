@@ -3,8 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from django.contrib.auth import update_session_auth_hash
-from .models import User
+from .models import User, PharmacySettings
 from .serializers import UserSerializer, UserRegistrationSerializer, ChangePasswordSerializer
+from .serializers_settings import PharmacySettingsSerializer
 
 
 class IsAdminOrManager(BasePermission):
@@ -58,3 +59,39 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
+
+
+class PharmacySettingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing pharmacy settings.
+    Only admins and managers can access.
+    """
+    serializer_class = PharmacySettingsSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrManager]
+    http_method_names = ['get', 'put', 'patch']  # Only allow get and update, no create/delete
+    
+    def get_queryset(self):
+        return PharmacySettings.objects.all()
+    
+    def get_object(self):
+        """Always return or create the singleton pharmacy settings"""
+        return PharmacySettings.get_settings()
+    
+    def list(self, request, *args, **kwargs):
+        """Return the singleton pharmacy settings"""
+        settings = self.get_object()
+        serializer = self.get_serializer(settings)
+        return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        """Update pharmacy settings"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.get('partial', False))
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        """Partial update of pharmacy settings"""
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)

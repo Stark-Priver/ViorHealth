@@ -19,6 +19,7 @@ const Breadcrumb = () => {
     customers: 'Customers',
     audit: 'Audit Logs',
     settings: 'Settings',
+    'pharmacy-settings': 'Pharmacy Settings',
     profile: 'Profile',
   };
 

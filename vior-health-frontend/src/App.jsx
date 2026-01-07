@@ -22,6 +22,7 @@ import CreatePrescriptionPage from './pages/CreatePrescriptionPage';
 import CustomersPage from './pages/CustomersPage';
 import ProfilePage from './pages/ProfilePage';
 import ExpensesPage from './pages/ExpensesPage';
+import PharmacySettingsPage from './pages/PharmacySettingsPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
@@ -133,6 +134,18 @@ function App() {
                 <ProtectedRoute allowedRoles={['admin', 'manager']}>
                   <MainLayout>
                     <SettingsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Pharmacy Settings - Admin and Manager only */}
+            <Route
+              path="/pharmacy-settings"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <MainLayout>
+                    <PharmacySettingsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SidebarContext } from './sidebarContext';
+import { SidebarContext } from './SidebarContextValue';
 
 export const SidebarProvider = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {

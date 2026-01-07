@@ -147,6 +147,12 @@ const Sidebar = () => {
           label: 'Audit Logs', 
           path: '/audit',
           roles: ['admin']
+        },
+        { 
+          icon: SettingsIcon, 
+          label: 'Pharmacy Settings', 
+          path: '/pharmacy-settings',
+          roles: ['admin', 'manager']
         }
       ]
     }

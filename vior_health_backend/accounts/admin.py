@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, PharmacySettings
 
 
 @admin.register(User)
@@ -16,3 +16,30 @@ class UserAdmin(BaseUserAdmin):
     )
     
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(PharmacySettings)
+class PharmacySettingsAdmin(admin.ModelAdmin):
+    list_display = ('pharmacy_name', 'phone', 'email', 'city', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('pharmacy_name', 'business_registration_number', 'tax_id')
+        }),
+        ('Contact Information', {
+            'fields': ('phone', 'email', 'website')
+        }),
+        ('Address', {
+            'fields': ('address_line1', 'address_line2', 'city', 'state_province', 'postal_code', 'country')
+        }),
+        ('Receipt Settings', {
+            'fields': ('receipt_header', 'receipt_footer', 'show_logo_on_receipt', 'business_hours')
+        }),
+        ('Currency', {
+            'fields': ('currency_symbol', 'currency_code')
+        }),
+        ('Metadata', {
+            'fields': ('updated_by', 'created_at', 'updated_at')
+        }),
+    )

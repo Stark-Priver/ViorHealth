@@ -204,9 +204,11 @@ const Sidebar = () => {
           ) : (
             <>
               <div className="w-full flex justify-center">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">V</span>
-                </div>
+                <img 
+                  src={logo} 
+                  alt="VIOR Health" 
+                  className="h-8 w-auto transition-all duration-300 hover:scale-110" 
+                />
               </div>
               {/* Toggle Button - Desktop Collapsed */}
               <button

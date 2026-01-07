@@ -15,7 +15,6 @@ const Breadcrumb = () => {
     'create-prescription': 'Create Prescription',
     suppliers: 'Suppliers',
     expenses: 'Expenses',
-    reports: 'Reports',
     customers: 'Customers',
     audit: 'Audit Logs',
     settings: 'Settings',
@@ -24,8 +23,16 @@ const Breadcrumb = () => {
     laboratory: 'Laboratory',
     tests: 'Lab Tests',
     'test-types': 'Test Types',
-    measurements: 'Measurements',
     'create-test': 'Create Test',
+  };
+  
+  // Special handling for laboratory reports
+  const getBreadcrumbName = (name, index) => {
+    // If we're in /laboratory/reports, show "Lab Reports" instead of just "Reports"
+    if (name === 'reports' && pathnames[index - 1] === 'laboratory') {
+      return 'Lab Reports';
+    }
+    return pathNameMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
   };
 
   if (pathnames.length === 0) {
@@ -44,7 +51,7 @@ const Breadcrumb = () => {
       {pathnames.map((name, index) => {
         const routeTo = `/${pathnames.slice(0, index + 1).join('/')}`;
         const isLast = index === pathnames.length - 1;
-        const displayName = pathNameMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+        const displayName = getBreadcrumbName(name, index);
 
         return (
           <div key={name} className="flex items-center space-x-2">

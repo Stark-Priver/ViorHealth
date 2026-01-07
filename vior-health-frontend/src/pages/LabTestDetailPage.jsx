@@ -4,7 +4,6 @@ import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
-import Breadcrumb from '../components/common/Breadcrumb';
 import { laboratoryAPI } from '../services/laboratory';
 import { 
   ArrowLeft, 
@@ -167,8 +166,6 @@ const LabTestDetailPage = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb />
-      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

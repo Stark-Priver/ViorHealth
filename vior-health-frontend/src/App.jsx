@@ -25,6 +25,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import PharmacySettingsPage from './pages/PharmacySettingsPage';
 import LabTechnicianDashboardPage from './pages/LabTechnicianDashboardPage';
 import LaboratoryTestsPage from './pages/LaboratoryTestsPage';
+import LabReportsPage from './pages/LabReportsPage';
 import LabTestDetailPage from './pages/LabTestDetailPage';
 import CreateLabTestPage from './pages/CreateLabTestPage';
 import TestTypesPage from './pages/TestTypesPage';
@@ -243,6 +244,16 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout>
                     <LaboratoryTestsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/laboratory/reports"
+              element={
+                <ProtectedRoute allowedRoles={['lab_technician']}>
+                  <MainLayout>
+                    <LabReportsPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

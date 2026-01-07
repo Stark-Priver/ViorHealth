@@ -143,8 +143,8 @@ const Sidebar = () => {
         },
         { 
           icon: Activity, 
-          label: 'Measurements', 
-          path: '/laboratory/tests?status=in_progress',
+          label: 'Reports', 
+          path: '/laboratory/reports',
           roles: ['lab_technician']
         }
       ]

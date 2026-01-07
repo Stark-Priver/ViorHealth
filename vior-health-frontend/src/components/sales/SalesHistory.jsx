@@ -4,8 +4,10 @@ import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
-import { Eye, Download, Search, Filter, X } from 'lucide-react';
+import ThermalReceipt from './ThermalReceipt';
+import { Eye, Download, Search, Filter, X, Printer } from 'lucide-react';
 import { salesAPI, analyticsAPI } from '../../services/api';
+import { getPharmacySettings } from '../../services/pharmacySettings';
 import { toast } from 'react-toastify';
 
 const SalesHistory = () => {
@@ -21,11 +23,23 @@ const SalesHistory = () => {
   const [selectedSale, setSelectedSale] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [pharmacySettings, setPharmacySettings] = useState(null);
 
   useEffect(() => {
     fetchSalesData();
     fetchStats();
+    fetchPharmacySettings();
   }, []);
+
+  const fetchPharmacySettings = async () => {
+    try {
+      const response = await getPharmacySettings();
+      setPharmacySettings(response.data);
+    } catch (error) {
+      console.error('Error fetching pharmacy settings:', error);
+    }
+  };
 
   const fetchSalesData = async () => {
     try {
@@ -54,6 +68,20 @@ const SalesHistory = () => {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handlePrintReceipt = async (saleId) => {
+    try {
+      setLoadingDetails(true);
+      const response = await salesAPI.getSale(saleId);
+      setSelectedSale(response.data);
+      setShowReceiptModal(true);
+    } catch (error) {
+      console.error('Error fetching sale details:', error);
+      toast.error('Failed to load sale details for printing');
+    } finally {
+      setLoadingDetails(false);
     }
   };
 
@@ -144,13 +172,24 @@ const SalesHistory = () => {
       header: 'Actions',
       accessor: 'actions',
       render: (row) => (
-        <button 
-          onClick={() => handleViewSale(row.id)}
-          className="text-primary-600 hover:text-primary-700"
-          disabled={loadingDetails}
-        >
-          <Eye className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => handleViewSale(row.id)}
+            className="text-primary-600 hover:text-primary-700 p-1 hover:bg-primary-50 rounded transition-colors"
+            disabled={loadingDetails}
+            title="View Details"
+          >
+            <Eye className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => handlePrintReceipt(row.id)}
+            className="text-green-600 hover:text-green-700 p-1 hover:bg-green-50 rounded transition-colors"
+            disabled={loadingDetails}
+            title="Print Receipt"
+          >
+            <Printer className="w-5 h-5" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -353,14 +392,40 @@ const SalesHistory = () => {
             )}
 
             {/* Served By */}
-            {selectedSale.created_by_name && (
+            {selectedSale.cashier_name && (
               <div className="text-sm text-neutral-600">
-                Served by: <span className="font-semibold text-neutral-800">{selectedSale.created_by_name}</span>
+                Served by: <span className="font-semibold text-neutral-800">{selectedSale.cashier_name}</span>
               </div>
             )}
+
+            {/* Print Button */}
+            <div className="flex justify-end pt-4 border-t border-neutral-200">
+              <Button 
+                variant="primary" 
+                icon={<Printer className="w-4 h-4" />}
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setShowReceiptModal(true);
+                }}
+              >
+                Print Receipt
+              </Button>
+            </div>
           </div>
         ) : null}
       </Modal>
+
+      {/* Thermal Receipt Modal */}
+      {showReceiptModal && selectedSale && (
+        <ThermalReceipt
+          sale={selectedSale}
+          pharmacySettings={pharmacySettings}
+          onClose={() => {
+            setShowReceiptModal(false);
+            setSelectedSale(null);
+          }}
+        />
+      )}
     </div>
   );
 };

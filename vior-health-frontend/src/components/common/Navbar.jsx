@@ -2,12 +2,14 @@ import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { toast } from 'react-toastify';
 import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { user, logout, hasRole } = useAuth();
+  const { isCollapsed } = useSidebar();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -37,18 +39,25 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-neutral-200 px-6 py-4 sticky top-0 z-40">
+    <nav 
+      className={`
+        bg-white border-b border-neutral-200 px-4 sm:px-6 py-4 
+        sticky top-0 z-30 transition-all duration-300
+        ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+      `}
+    >
       <div className="flex items-center justify-between">
         {/* Logo and Search */}
-        <div className="flex items-center gap-6 flex-1">
-          <img src={logo} alt="VIOR Health" className="h-12 w-auto" />
+        <div className="flex items-center gap-4 sm:gap-6 flex-1">
+          {/* Mobile logo - hidden on desktop since sidebar shows logo */}
+          <img src={logo} alt="VIOR Health" className="h-10 w-auto lg:hidden" />
           
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search medications, prescriptions..."
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
             />
           </div>
         </div>

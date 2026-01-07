@@ -2,9 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
+import Breadcrumb from './components/common/Breadcrumb';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -22,13 +24,23 @@ import ExpensesPage from './pages/ExpensesPage';
 
 // Layout component for authenticated pages
 const MainLayout = ({ children }) => {
+  const { isCollapsed } = useSidebar();
+  
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 overflow-x-hidden">
       <Navbar />
-      <div className="flex">
+      <div className="flex overflow-x-hidden">
         <Sidebar />
-        <main className="flex-1 p-8 ml-64">
-          {children}
+        <main 
+          className={`
+            flex-1 min-h-screen transition-all duration-300 overflow-x-hidden
+            ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+          `}
+        >
+          <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+            <Breadcrumb />
+            {children}
+          </div>
         </main>
       </div>
     </div>
@@ -44,9 +56,10 @@ const Home = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="font-poppins">
-          <Routes>
+      <SidebarProvider>
+        <Router>
+          <div className="font-poppins">
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
@@ -212,6 +225,7 @@ function App() {
           />
         </div>
       </Router>
+      </SidebarProvider>
     </AuthProvider>
   );
 }

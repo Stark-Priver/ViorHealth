@@ -19,6 +19,7 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
       <html>
         <head>
           <title>Receipt - ${sale.invoice_number}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
           <style>
             @page {
               size: 80mm auto;
@@ -44,132 +45,310 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
             }
             
             body {
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
+              font-family: 'Poppins', sans-serif;
+              font-size: 10px;
               line-height: 1.4;
               color: #000;
               background: white;
               width: 80mm;
-              padding: 10mm 5mm;
+              padding: 5mm;
             }
             
             .receipt-container {
               width: 100%;
             }
             
+            /* Header Styling */
             .header {
               text-align: center;
-              margin-bottom: 8px;
-              border-bottom: 2px dashed #000;
-              padding-bottom: 8px;
+              margin-bottom: 15px;
+              padding-bottom: 12px;
+              border-bottom: 3px double #000;
             }
             
-            .header h1 {
-              font-size: 18px;
-              font-weight: bold;
+            .pharmacy-name {
+              font-size: 22px;
+              font-weight: 800;
               margin-bottom: 4px;
               text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #000;
             }
             
             .header-info {
-              font-size: 11px;
-              line-height: 1.3;
+              font-size: 9px;
+              line-height: 1.5;
+              color: #333;
+              margin-top: 6px;
             }
             
-            .section {
-              margin: 8px 0;
-              padding: 6px 0;
+            .header-info div {
+              margin: 1px 0;
             }
             
-            .section-title {
-              font-weight: bold;
+            .divider {
+              border-bottom: 1px dashed #999;
+              margin: 10px 0;
+            }
+            
+            .divider-thick {
+              border-bottom: 2px solid #000;
+              margin: 12px 0;
+            }
+            
+            /* Transaction Info */
+            .transaction-header {
+              text-align: center;
               font-size: 11px;
+              font-weight: 700;
               text-transform: uppercase;
-              margin-bottom: 4px;
-              border-bottom: 1px solid #000;
+              letter-spacing: 1px;
+              margin: 12px 0 8px 0;
+              color: #000;
+            }
+            
+            .info-table {
+              width: 100%;
+              margin: 8px 0;
+              font-size: 9px;
             }
             
             .info-row {
               display: flex;
               justify-content: space-between;
-              font-size: 11px;
-              margin: 2px 0;
+              padding: 3px 0;
+              border-bottom: 1px dotted #ddd;
+            }
+            
+            .info-row:last-child {
+              border-bottom: none;
             }
             
             .info-label {
-              font-weight: bold;
+              font-weight: 600;
+              color: #555;
+              text-transform: uppercase;
+              font-size: 8px;
+              letter-spacing: 0.5px;
             }
             
-            .items-table {
-              width: 100%;
-              margin: 8px 0;
-              border-top: 1px dashed #000;
-              border-bottom: 1px dashed #000;
+            .info-value {
+              font-weight: 600;
+              text-align: right;
+              color: #000;
+            }
+            
+            /* Items Section */
+            .items-header {
+              text-align: center;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin: 12px 0 8px 0;
               padding: 6px 0;
+              background: #f5f5f5;
+              border-top: 2px solid #000;
+              border-bottom: 2px solid #000;
             }
             
-            .item-row {
-              margin: 4px 0;
+            .items-list {
+              margin: 10px 0;
+            }
+            
+            .item {
+              margin: 8px 0;
+              padding: 6px 0;
+              border-bottom: 1px dashed #ddd;
+            }
+            
+            .item:last-child {
+              border-bottom: none;
             }
             
             .item-name {
-              font-weight: bold;
-              font-size: 11px;
+              font-weight: 600;
+              font-size: 10px;
+              margin-bottom: 3px;
+              color: #000;
             }
             
             .item-details {
               display: flex;
               justify-content: space-between;
-              font-size: 10px;
+              font-size: 9px;
+              color: #666;
+            }
+            
+            .item-qty {
+              flex: 1;
+            }
+            
+            .item-price {
+              text-align: right;
+              font-weight: 600;
+              color: #000;
+            }
+            
+            .item-discount {
+              font-size: 8px;
+              color: #e74c3c;
               margin-top: 2px;
+              text-align: right;
             }
             
-            .totals {
-              margin-top: 8px;
-              padding-top: 6px;
-              border-top: 1px solid #000;
+            /* Totals Section */
+            .totals-section {
+              margin-top: 15px;
+              padding-top: 10px;
+              border-top: 3px double #000;
             }
             
-            .total-row {
+            .total-line {
               display: flex;
               justify-content: space-between;
-              margin: 3px 0;
-              font-size: 11px;
-            }
-            
-            .total-row.grand-total {
-              font-size: 14px;
-              font-weight: bold;
-              border-top: 2px solid #000;
-              border-bottom: 2px solid #000;
               padding: 4px 0;
-              margin-top: 6px;
+              font-size: 10px;
             }
             
+            .total-label {
+              text-transform: uppercase;
+              font-size: 9px;
+              letter-spacing: 0.5px;
+            }
+            
+            .total-value {
+              font-weight: 600;
+              text-align: right;
+            }
+            
+            .subtotal-line {
+              color: #666;
+            }
+            
+            .discount-line {
+              color: #e74c3c;
+            }
+            
+            .tax-line {
+              color: #666;
+            }
+            
+            .grand-total-line {
+              margin-top: 8px;
+              padding: 10px 8px;
+              background: #000;
+              color: #fff;
+              font-size: 14px;
+              font-weight: 800;
+              border-radius: 4px;
+            }
+            
+            .grand-total-line .total-label {
+              font-size: 12px;
+              letter-spacing: 1px;
+            }
+            
+            .payment-info {
+              margin-top: 10px;
+              padding-top: 10px;
+              border-top: 1px dashed #999;
+            }
+            
+            .payment-line {
+              display: flex;
+              justify-content: space-between;
+              padding: 3px 0;
+              font-size: 10px;
+              font-weight: 600;
+            }
+            
+            /* Notes Section */
+            .notes-box {
+              margin: 12px 0;
+              padding: 8px;
+              background: #f9f9f9;
+              border-left: 3px solid #3498db;
+              border-radius: 2px;
+            }
+            
+            .notes-title {
+              font-weight: 700;
+              font-size: 8px;
+              text-transform: uppercase;
+              margin-bottom: 4px;
+              color: #3498db;
+              letter-spacing: 0.5px;
+            }
+            
+            .notes-text {
+              font-size: 9px;
+              line-height: 1.4;
+              color: #555;
+            }
+            
+            /* Footer Section */
             .footer {
               text-align: center;
-              margin-top: 12px;
-              padding-top: 8px;
-              border-top: 2px dashed #000;
-              font-size: 10px;
+              margin-top: 15px;
+              padding-top: 12px;
+              border-top: 3px double #000;
+            }
+            
+            .thank-you {
+              font-size: 12px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              color: #000;
             }
             
             .footer-message {
-              margin: 4px 0;
+              font-size: 9px;
+              margin: 6px 0;
               font-style: italic;
+              color: #555;
             }
             
-            .barcode-section {
-              text-align: center;
+            .hours-section {
+              margin: 10px 0;
+              padding: 8px;
+              background: #f5f5f5;
+              border-radius: 3px;
+            }
+            
+            .hours-title {
+              font-size: 8px;
+              font-weight: 700;
+              text-transform: uppercase;
+              margin-bottom: 4px;
+              color: #000;
+              letter-spacing: 0.5px;
+            }
+            
+            .hours-text {
+              font-size: 8px;
+              line-height: 1.5;
+              color: #555;
+            }
+            
+            .powered {
+              font-size: 7px;
+              margin-top: 12px;
+              color: #999;
+              font-weight: 500;
+              letter-spacing: 0.5px;
+            }
+            
+            .highlight-box {
+              background: #f9f9f9;
+              padding: 6px;
               margin: 8px 0;
-            }
-            
-            .text-center {
+              border-radius: 3px;
               text-align: center;
-            }
-            
-            .text-bold {
-              font-weight: bold;
+              font-size: 9px;
+              font-style: italic;
+              color: #555;
+              border: 1px dashed #ddd;
             }
           </style>
         </head>
@@ -224,135 +403,145 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
 
         {/* Receipt Content */}
         <div className="p-6 bg-neutral-50">
-          <div className="bg-white shadow-sm" style={{ width: '80mm', margin: '0 auto', padding: '10mm 5mm', fontFamily: "'Courier New', monospace" }}>
+          <div className="bg-white shadow-lg" style={{ width: '80mm', margin: '0 auto', padding: '5mm', fontFamily: "'Poppins', sans-serif" }}>
             <div ref={printRef} className="receipt-container">
+              
               {/* Header */}
               <div className="header">
-                <h1>{pharmacySettings?.pharmacy_name || 'Pharmacy'}</h1>
+                <div className="pharmacy-name">{pharmacySettings?.pharmacy_name || 'PHARMACY'}</div>
                 <div className="header-info">
                   {pharmacySettings?.address_line1 && <div>{pharmacySettings.address_line1}</div>}
                   {pharmacySettings?.city && pharmacySettings?.state_province && (
                     <div>{pharmacySettings.city}, {pharmacySettings.state_province} {pharmacySettings.postal_code}</div>
                   )}
                   {pharmacySettings?.phone && <div>Tel: {pharmacySettings.phone}</div>}
-                  {pharmacySettings?.email && <div>Email: {pharmacySettings.email}</div>}
-                  {pharmacySettings?.tax_id && <div>Tax ID: {pharmacySettings.tax_id}</div>}
+                  {pharmacySettings?.email && <div>{pharmacySettings.email}</div>}
+                  {pharmacySettings?.tax_id && <div>TIN: {pharmacySettings.tax_id}</div>}
                 </div>
               </div>
 
-              {/* Custom Header */}
+              {/* Custom Message */}
               {pharmacySettings?.receipt_header && (
-                <div className="text-center" style={{ fontSize: '10px', margin: '6px 0', fontStyle: 'italic' }}>
+                <div className="highlight-box">
                   {pharmacySettings.receipt_header}
                 </div>
               )}
 
-              {/* Sale Information */}
-              <div className="section">
+              {/* Transaction Details */}
+              <div className="transaction-header">SALES RECEIPT</div>
+              <div className="info-table">
                 <div className="info-row">
-                  <span className="info-label">Invoice:</span>
-                  <span>{sale.invoice_number}</span>
+                  <span className="info-label">Invoice No</span>
+                  <span className="info-value">{sale.invoice_number}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Date:</span>
-                  <span>{formatDate(sale.created_at)}</span>
+                  <span className="info-label">Date & Time</span>
+                  <span className="info-value">{formatDate(sale.created_at)}</span>
                 </div>
                 {sale.customer_name && (
                   <div className="info-row">
-                    <span className="info-label">Customer:</span>
-                    <span>{sale.customer_name}</span>
+                    <span className="info-label">Customer</span>
+                    <span className="info-value">{sale.customer_name}</span>
                   </div>
                 )}
                 <div className="info-row">
-                  <span className="info-label">Cashier:</span>
-                  <span>{sale.cashier_name || 'N/A'}</span>
+                  <span className="info-label">Cashier</span>
+                  <span className="info-value">{sale.cashier_name || 'N/A'}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Payment:</span>
-                  <span>{sale.payment_method.toUpperCase()}</span>
+                  <span className="info-label">Payment</span>
+                  <span className="info-value" style={{ textTransform: 'uppercase' }}>{sale.payment_method}</span>
                 </div>
               </div>
 
-              {/* Items */}
-              <div className="items-table">
-                <div className="section-title">ITEMS</div>
+              {/* Items Header */}
+              <div className="items-header">ITEMS PURCHASED</div>
+
+              {/* Items List */}
+              <div className="items-list">
                 {sale.items && sale.items.map((item, index) => (
-                  <div key={index} className="item-row">
+                  <div key={index} className="item">
                     <div className="item-name">{item.product_name}</div>
                     <div className="item-details">
-                      <span>{item.quantity} x {formatCurrency(item.unit_price)}</span>
-                      <span className="text-bold">{formatCurrency(item.total)}</span>
+                      <span className="item-qty">{item.quantity} × {formatCurrency(item.unit_price)}</span>
+                      <span className="item-price">{formatCurrency(item.total)}</span>
                     </div>
                     {parseFloat(item.discount) > 0 && (
-                      <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
-                        Discount: -{formatCurrency(item.discount)}
+                      <div className="item-discount">
+                        Discount Applied: -{formatCurrency(item.discount)}
                       </div>
                     )}
                   </div>
                 ))}
               </div>
 
-              {/* Totals */}
-              <div className="totals">
-                <div className="total-row">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(sale.subtotal)}</span>
+              {/* Totals Section */}
+              <div className="totals-section">
+                <div className="total-line subtotal-line">
+                  <span className="total-label">Subtotal</span>
+                  <span className="total-value">{formatCurrency(sale.subtotal)}</span>
                 </div>
                 {parseFloat(sale.discount) > 0 && (
-                  <div className="total-row">
-                    <span>Discount:</span>
-                    <span>-{formatCurrency(sale.discount)}</span>
+                  <div className="total-line discount-line">
+                    <span className="total-label">Discount</span>
+                    <span className="total-value">-{formatCurrency(sale.discount)}</span>
                   </div>
                 )}
                 {parseFloat(sale.tax) > 0 && (
-                  <div className="total-row">
-                    <span>Tax:</span>
-                    <span>{formatCurrency(sale.tax)}</span>
+                  <div className="total-line tax-line">
+                    <span className="total-label">Tax (VAT)</span>
+                    <span className="total-value">{formatCurrency(sale.tax)}</span>
                   </div>
                 )}
-                <div className="total-row grand-total">
-                  <span>TOTAL:</span>
-                  <span>{formatCurrency(sale.total)}</span>
+                
+                <div className="total-line grand-total-line">
+                  <span className="total-label">GRAND TOTAL</span>
+                  <span className="total-value">{formatCurrency(sale.total)}</span>
                 </div>
-                <div className="total-row">
-                  <span>Amount Paid:</span>
-                  <span>{formatCurrency(sale.amount_paid)}</span>
-                </div>
-                {parseFloat(sale.change_amount) > 0 && (
-                  <div className="total-row">
-                    <span>Change:</span>
-                    <span>{formatCurrency(sale.change_amount)}</span>
+
+                <div className="payment-info">
+                  <div className="payment-line">
+                    <span>Amount Paid</span>
+                    <span>{formatCurrency(sale.amount_paid)}</span>
                   </div>
-                )}
+                  {parseFloat(sale.change_amount) > 0 && (
+                    <div className="payment-line">
+                      <span>Change</span>
+                      <span>{formatCurrency(sale.change_amount)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Notes */}
               {sale.notes && (
-                <div className="section" style={{ fontSize: '10px', fontStyle: 'italic' }}>
-                  <div className="section-title">Notes</div>
-                  <div>{sale.notes}</div>
+                <div className="notes-box">
+                  <div className="notes-title">Special Notes</div>
+                  <div className="notes-text">{sale.notes}</div>
                 </div>
               )}
 
               {/* Footer */}
               <div className="footer">
-                {pharmacySettings?.receipt_footer && (
-                  <div className="footer-message">{pharmacySettings.receipt_footer}</div>
-                )}
-                <div style={{ marginTop: '8px' }}>
-                  <div>Thank you for your business!</div>
-                  {pharmacySettings?.business_hours && (
-                    <div style={{ marginTop: '4px', fontSize: '9px' }}>
+                <div className="thank-you">
+                  {pharmacySettings?.receipt_footer || 'THANK YOU FOR YOUR PURCHASE!'}
+                </div>
+                
+                {pharmacySettings?.business_hours && (
+                  <div className="hours-section">
+                    <div className="hours-title">Business Hours</div>
+                    <div className="hours-text">
                       {pharmacySettings.business_hours.split('\n').map((line, i) => (
                         <div key={i}>{line}</div>
                       ))}
                     </div>
-                  )}
-                </div>
-                <div style={{ marginTop: '8px', fontSize: '9px' }}>
-                  Powered by VIOR Health
-                </div>
+                  </div>
+                )}
+
+                <div className="divider"></div>
+                <div className="powered">POWERED BY VIOR HEALTH SYSTEM</div>
               </div>
+
             </div>
           </div>
         </div>

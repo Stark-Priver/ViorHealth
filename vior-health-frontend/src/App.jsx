@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { SidebarProvider, useSidebar } from './context/SidebarContext';
+import { SidebarProvider } from './context/SidebarContext';
+import { useSidebar } from './hooks/useSidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';

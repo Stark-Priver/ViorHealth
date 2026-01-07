@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
+import { useSidebar } from '../../hooks/useSidebar';
 import logo from '../../assets/logo.png';
 import { useEffect, useState } from 'react';
 

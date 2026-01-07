@@ -2,7 +2,7 @@ import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useSidebar } from '../../context/SidebarContext';
+import { useSidebar } from '../../hooks/useSidebar';
 import { toast } from 'react-toastify';
 import logo from '../../assets/logo.png';
 

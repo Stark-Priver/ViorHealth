@@ -26,4 +26,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('window-maximized', () => callback(true));
     ipcRenderer.on('window-unmaximized', () => callback(false));
   },
+
+  // Printer functions
+  getPrinters: () => ipcRenderer.invoke('get-printers'),
+  printReceipt: (html) => ipcRenderer.invoke('print-receipt', html),
 });

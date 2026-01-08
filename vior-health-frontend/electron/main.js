@@ -106,6 +106,94 @@ ipcMain.on('window-close', () => {
   if (mainWindow) mainWindow.close();
 });
 
+// Handle get printers
+ipcMain.handle('get-printers', async () => {
+  try {
+    if (mainWindow && mainWindow.webContents) {
+      const printers = await mainWindow.webContents.getPrintersAsync();
+      return { success: true, printers };
+    }
+    return { success: false, error: 'Window not available' };
+  } catch (error) {
+    console.error('Error getting printers:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handle print receipt
+ipcMain.handle('print-receipt', async (event, html) => {
+  try {
+    if (!mainWindow || !mainWindow.webContents) {
+      return { success: false, error: 'Window not available' };
+    }
+
+    // Create a hidden window for printing
+    const printWindow = new BrowserWindow({
+      width: 302, // 80mm in pixels (80mm * 3.78 pixels/mm)
+      height: 800,
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+
+    // Load the HTML content
+    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+    // Wait for content to load
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Get available printers
+    const printers = await printWindow.webContents.getPrintersAsync();
+    
+    // Find thermal printer (check for common thermal printer names)
+    const thermalPrinter = printers.find(p => 
+      p.name.toLowerCase().includes('thermal') ||
+      p.name.toLowerCase().includes('receipt') ||
+      p.name.toLowerCase().includes('pos') ||
+      p.name.toLowerCase().includes('xprinter') ||
+      p.name.toLowerCase().includes('epson')
+    );
+
+    // Print options
+    const printOptions = {
+      silent: false, // Show print dialog
+      printBackground: true,
+      margins: {
+        marginType: 'none'
+      },
+      pageSize: {
+        width: 80000, // 80mm in microns
+        height: 200000 // Auto height
+      }
+    };
+
+    // If thermal printer found, use it directly
+    if (thermalPrinter) {
+      printOptions.deviceName = thermalPrinter.name;
+      printOptions.silent = true; // Don't show dialog for thermal printer
+    }
+
+    // Print
+    await printWindow.webContents.print(printOptions);
+
+    // Close the print window after a delay
+    setTimeout(() => {
+      printWindow.close();
+    }, 1000);
+
+    return { 
+      success: true, 
+      printer: thermalPrinter ? thermalPrinter.name : 'Default',
+      availablePrinters: printers.length
+    };
+  } catch (error) {
+    console.error('Error printing receipt:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 async function initializeApp() {
   try {
     // Show splash screen

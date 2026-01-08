@@ -756,31 +756,22 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full max-h-[85vh] overflow-hidden flex flex-col">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-white border-b border-neutral-200 p-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">Receipt Preview</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrint}
-              disabled={printing}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {printing ? 'Printing...' : 'Print Receipt'}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-neutral-600" />
-            </button>
-          </div>
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-4 py-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-white">Receipt Preview</h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
         </div>
 
         {/* Receipt Content */}
-        <div className="p-6 bg-neutral-50">
-          <div className="bg-white shadow-lg" style={{ width: '80mm', margin: '0 auto', padding: '5mm', fontFamily: "'Poppins', sans-serif" }}>
+        <div className="flex-1 overflow-y-auto p-4 bg-neutral-50">
+          <div className="bg-white shadow-md rounded-lg" style={{ width: '100%', maxWidth: '80mm', margin: '0 auto', padding: '4mm', fontFamily: "'Poppins', sans-serif", transform: 'scale(0.85)', transformOrigin: 'top center' }}>
             <div ref={printRef} className="receipt-container">
               
               {/* Header */}
@@ -943,12 +934,26 @@ const ThermalReceipt = ({ sale, pharmacySettings, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-neutral-200 p-4 flex justify-end gap-2">
-          <button onClick={onClose} className="btn-secondary">
-            Close
+        <div className="border-t border-neutral-200 bg-white p-3 flex items-center justify-end gap-2">
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+          >
+            Cancel
           </button>
-          <button onClick={handlePrint} className="btn-primary">
-            Print
+          <button 
+            onClick={handlePrint} 
+            disabled={printing}
+            className="px-5 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {printing ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Printing...
+              </>
+            ) : (
+              'Print Receipt'
+            )}
           </button>
         </div>
       </div>

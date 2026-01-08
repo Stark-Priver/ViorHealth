@@ -63,8 +63,22 @@ async function createWindow() {
     mainWindow.loadURL(FRONTEND_URL);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    console.log('Loading production file from:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      console.error('Failed to load index.html:', err);
+      dialog.showErrorBox('Loading Error', `Failed to load application: ${err.message}`);
+    });
   }
+
+  // Log any web contents errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
+
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`Console [${level}]:`, message);
+  });
 
   // Handle window close
   mainWindow.on('closed', () => {

@@ -2,7 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ViorHealth - Loading...</title>
+  <title>VIOR Health - Loading...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -16,76 +19,339 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #F8FAFC;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       overflow: hidden;
+      position: relative;
+    }
+
+    /* Floating Shapes */
+    .shape {
+      position: absolute;
+      opacity: 0.08;
+    }
+
+    .shape-1 {
+      top: 10%;
+      left: 15%;
+      width: 100px;
+      height: 100px;
+      border: 3px solid #6366F1;
+      border-radius: 20px;
+      transform: rotate(25deg);
+      animation: float1 8s ease-in-out infinite;
+    }
+
+    .shape-2 {
+      top: 60%;
+      right: 20%;
+      width: 80px;
+      height: 80px;
+      border: 3px solid #10B981;
+      border-radius: 50%;
+      animation: float2 10s ease-in-out infinite;
+    }
+
+    .shape-3 {
+      bottom: 15%;
+      left: 25%;
+      width: 60px;
+      height: 60px;
+      border: 3px solid #3B82F6;
+      border-radius: 10px;
+      transform: rotate(45deg);
+      animation: float3 12s ease-in-out infinite;
+    }
+
+    .shape-4 {
+      top: 20%;
+      right: 30%;
+      font-size: 60px;
+      animation: float1 9s ease-in-out infinite;
+    }
+
+    .shape-5 {
+      bottom: 25%;
+      right: 15%;
+      font-size: 50px;
+      animation: float2 11s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% {
+        transform: translateY(0px) rotate(25deg);
+      }
+      50% {
+        transform: translateY(-30px) rotate(35deg);
+      }
+    }
+
+    @keyframes float2 {
+      0%, 100% {
+        transform: translateY(0px) translateX(0px);
+      }
+      50% {
+        transform: translateY(-20px) translateX(20px);
+      }
+    }
+
+    @keyframes float3 {
+      0%, 100% {
+        transform: translateY(0px) rotate(45deg);
+      }
+      50% {
+        transform: translateY(-25px) rotate(55deg);
+      }
     }
     
     .splash-container {
       text-align: center;
-      color: white;
+      position: relative;
+      z-index: 10;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Logo Container */
+    .logo-container {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 40px;
+    }
+
+    .logo-bg {
+      position: absolute;
+      inset: -30px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    }
+
+    .logo {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .logo-fallback {
+      font-size: 100px;
+      animation: logoFloat 3s ease-in-out infinite;
     }
     
-    .logo {
-      font-size: 72px;
+    .title {
+      font-size: 42px;
       font-weight: 700;
-      margin-bottom: 20px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 12px;
+      color: #1F2937;
+      letter-spacing: -1px;
     }
     
     .subtitle {
-      font-size: 24px;
-      margin-bottom: 40px;
-      opacity: 0.9;
+      font-size: 18px;
+      margin-bottom: 50px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+
+    /* Modern Loading Spinner */
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
     }
     
     .loader {
       width: 60px;
       height: 60px;
-      border: 4px solid rgba(255,255,255,0.3);
-      border-top: 4px solid white;
+      position: relative;
+    }
+
+    .loader-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 4px solid #E5E7EB;
+      border-top-color: #6366F1;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     }
-    
-    .status {
-      margin-top: 30px;
-      font-size: 16px;
-      opacity: 0.8;
+
+    .loader-ring:nth-child(2) {
+      width: 80%;
+      height: 80%;
+      top: 10%;
+      left: 10%;
+      border-top-color: #3B82F6;
+      animation-delay: -0.4s;
     }
-    
+
+    .loader-ring:nth-child(3) {
+      width: 60%;
+      height: 60%;
+      top: 20%;
+      left: 20%;
+      border-top-color: #10B981;
+      animation-delay: -0.8s;
+    }
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
-    
-    .dots {
-      display: inline-block;
-      width: 30px;
-      text-align: left;
+
+    .loading-text {
+      font-size: 16px;
+      color: #6B7280;
+      font-weight: 600;
     }
-    
-    @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60%, 100% { content: '...'; }
-    }
-    
-    .dots::after {
+
+    .loading-dots::after {
       content: '';
-      animation: dots 1.5s infinite;
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 25% { content: ''; }
+      25%, 50% { content: '.'; }
+      50%, 75% { content: '..'; }
+      75%, 100% { content: '...'; }
+    }
+
+    /* Feature Cards */
+    .features {
+      margin-top: 60px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-size: 14px;
+      color: #374151;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      animation: slideUp 0.8s ease-out forwards;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feature-card .icon {
+      font-size: 24px;
+    }
+
+    .feature-card:nth-child(1) {
+      animation-delay: 0.3s;
+    }
+
+    .feature-card:nth-child(2) {
+      animation-delay: 0.5s;
+    }
+
+    .feature-card:nth-child(3) {
+      animation-delay: 0.7s;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Version Info */
+    .version {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #9CA3AF;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+  <div class="shape shape-4">💊</div>
+  <div class="shape shape-5">🏥</div>
+
   <div class="splash-container">
-    <div class="logo">ViorHealth</div>
-    <div class="subtitle">Healthcare Management System</div>
-    <div class="loader"></div>
-    <div class="status">
-      Starting application<span class="dots"></span>
+    <div class="logo-container">
+      <div class="logo-bg"></div>
+      <img 
+        src="../src/assets/logo.png" 
+        alt="VIOR Health Logo" 
+        class="logo"
+        onerror="this.style.display='none'; this.parentElement.querySelector('.logo-bg').insertAdjacentHTML('afterend', '<div class=\'logo-fallback\'>💊</div>');"
+      >
+    </div>
+    
+    <h1 class="title">VIOR HEALTH</h1>
+    <p class="subtitle">Pharmacy Management System</p>
+    
+    <div class="loader-container">
+      <div class="loader">
+        <div class="loader-ring"></div>
+        <div class="loader-ring"></div>
+        <div class="loader-ring"></div>
+      </div>
+      <p class="loading-text">Starting Application<span class="loading-dots"></span></p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <span class="icon">📦</span>
+        <span>Inventory Control</span>
+      </div>
+      <div class="feature-card">
+        <span class="icon">💰</span>
+        <span>Sales Management</span>
+      </div>
+      <div class="feature-card">
+        <span class="icon">📊</span>
+        <span>Analytics & Reports</span>
+      </div>
     </div>
   </div>
+
+  <div class="version">Version 1.0.0</div>
 </body>
 </html>

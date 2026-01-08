@@ -206,7 +206,7 @@ const Sidebar = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
+        className="lg:hidden fixed top-12 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
         aria-label="Toggle menu"
       >
         {isMobileOpen ? <X className="w-6 h-6 text-neutral-700" /> : <Menu className="w-6 h-6 text-neutral-700" />}
@@ -223,7 +223,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen bg-white border-r border-neutral-200 z-40
+          fixed left-0 top-8 h-[calc(100vh-2rem)] bg-white border-r border-neutral-200 z-40
           transition-all duration-300 ease-in-out flex flex-col
           ${isCollapsed ? 'w-20' : 'w-64'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}

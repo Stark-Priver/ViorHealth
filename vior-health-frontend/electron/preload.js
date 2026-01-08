@@ -16,18 +16,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App information
   isElectron: true,
   
-  // You can add more secure IPC methods here as needed
-  // Example:
-  // sendMessage: (channel, data) => {
-  //   const validChannels = ['toMain'];
-  //   if (validChannels.includes(channel)) {
-  //     ipcRenderer.send(channel, data);
-  //   }
-  // },
-  // receiveMessage: (channel, func) => {
-  //   const validChannels = ['fromMain'];
-  //   if (validChannels.includes(channel)) {
-  //     ipcRenderer.on(channel, (event, ...args) => func(...args));
-  //   }
-  // },
+  // Window controls
+  minimizeWindow: () => ipcRenderer.send('window-minimize'),
+  maximizeWindow: () => ipcRenderer.send('window-maximize'),
+  closeWindow: () => ipcRenderer.send('window-close'),
+  
+  // Listen for window state changes
+  onMaximizeChange: (callback) => {
+    ipcRenderer.on('window-maximized', () => callback(true));
+    ipcRenderer.on('window-unmaximized', () => callback(false));
+  },
 });

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViorHealth - Connection Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #667eea; }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .test-btn:hover { background: #5568d3; }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 ViorHealth - Connection Diagnostic</h1>
+        
+        <div id="env-info" class="status info">
+            <strong>Environment Check:</strong><br>
+            API URL: <code id="api-url">Loading...</code><br>
+            Running in: <span id="electron-check">Checking...</span>
+        </div>
+
+        <div>
+            <button class="test-btn" onclick="testBackendConnection()">Test Backend Connection</button>
+            <button class="test-btn" onclick="testAPIEndpoint()">Test API Endpoint</button>
+            <button class="test-btn" onclick="location.reload()">Reload App</button>
+        </div>
+
+        <div id="results"></div>
+
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Test Backend Connection" to verify Django is running</li>
+            <li>Click "Test API Endpoint" to check API accessibility</li>
+            <li>If tests pass, navigate to the main app</li>
+            <li>If tests fail, check console for errors</li>
+        </ol>
+
+        <div id="console-log"></div>
+    </div>
+
+    <script>
+        // Check environment
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+        document.getElementById('api-url').textContent = API_BASE_URL;
+        
+        const isElectron = window.electronAPI && window.electronAPI.isElectron;
+        document.getElementById('electron-check').textContent = isElectron ? 'Electron Desktop App ✅' : 'Web Browser';
+
+        const resultsDiv = document.getElementById('results');
+        const consoleLog = document.getElementById('console-log');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        function addLog(message) {
+            const p = document.createElement('pre');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleLog.appendChild(p);
+            console.log(message);
+        }
+
+        async function testBackendConnection() {
+            resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Testing backend connection...</div>';
+            addLog('Testing backend connection...');
+
+            try {
+                const baseUrl = API_BASE_URL.replace('/api', '');
+                addLog(`Attempting to connect to: ${baseUrl}`);
+                
+                const response = await fetch(baseUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                });
+
+                addLog(`Response status: ${response.status}`);
+                addLog(`Response ok: ${response.ok}`);
+
+                if (response.ok || response.status === 200) {
+                    addResult(`✅ Backend is running at ${baseUrl}`, 'success');
+                } else {
+                    addResult(`⚠️ Backend responded with status ${response.status}`, 'info');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`);
+                addResult(`❌ Cannot connect to backend: ${error.message}`, 'error');
+                addResult(`Make sure Django is running on port 8000`, 'info');
+            }
+        }
+
+        async function testAPIEndpoint() {
+            resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Testing API endpoint...</div>';
+            addLog('Testing API endpoint...');
+
+            try {
+                addLog(`Attempting to connect to: ${API_BASE_URL}`);
+                
+                const response = await fetch(`${API_BASE_URL}/`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                addLog(`Response status: ${response.status}`);
+                const data = await response.json();
+                addLog(`Response data: ${JSON.stringify(data, null, 2)}`);
+
+                if (response.ok) {
+                    addResult(`✅ API is accessible!<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                    addResult(`<a href="/" class="test-btn" style="display: inline-block; text-decoration: none; margin-top: 10px;">Go to Main App →</a>`, 'success');
+                } else {
+                    addResult(`⚠️ API responded with status ${response.status}`, 'info');
+                }
+            } catch (error) {
+                addLog(`Error: ${error.message}`);
+                addResult(`❌ API Error: ${error.message}`, 'error');
+                
+                // Provide troubleshooting steps
+                addResult(`
+                    <strong>Troubleshooting:</strong><br>
+                    1. Ensure Django server is running (check terminal)<br>
+                    2. Check CORS settings in Django settings.py<br>
+                    3. Try using 127.0.0.1 instead of localhost<br>
+                    4. Clear browser cache and reload
+                `, 'info');
+            }
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            addLog('ViorHealth Diagnostic Tool loaded');
+            addLog(`API Base URL: ${API_BASE_URL}`);
+            addLog(`Is Electron: ${isElectron}`);
+            
+            // Auto-test connection
+            setTimeout(() => {
+                testBackendConnection();
+            }, 500);
+        });
+
+        // Log any console errors
+        window.addEventListener('error', (e) => {
+            addLog(`Error: ${e.message}`);
+        });
+    </script>
+</body>
+</html>

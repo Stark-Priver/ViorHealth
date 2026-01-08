@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
 const path = require('path');
 const { startBackendServer, stopBackendServer } = require('./backend-manager');
 
@@ -25,11 +25,17 @@ function createSplashWindow() {
 }
 
 async function createWindow() {
+  // Remove the application menu completely
+  Menu.setApplicationMenu(null);
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
     minHeight: 768,
+    frame: false, // Remove default window frame
+    titleBarStyle: 'hidden',
+    autoHideMenuBar: true, // Hide menu bar
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -69,14 +75,42 @@ async function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
     return { action: 'deny' };
-  });how splash screen
-    createSplashWindow();
-    
-    // S
+  });
+
+  // Handle maximize/unmaximize events
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('window-maximized');
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('window-unmaximized');
+  });
 }
+
+// Window control handlers
+ipcMain.on('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('window-close', () => {
+  if (mainWindow) mainWindow.close();
+});
 
 async function initializeApp() {
   try {
+    // Show splash screen
+    createSplashWindow();
+    
     // Start Django backend server
     console.log('Starting Django backend server...');
     backendProcess = await startBackendServer();

@@ -155,7 +155,7 @@ const LandingPage = () => {
                 <Button 
                   variant="primary" 
                   size="lg" 
-                  icon={<ArrowRight className="w-5 h-5" />}
+                  icon={ArrowRight}
                   onClick={() => navigate('/login')}
                   className="text-lg px-8 py-4"
                 >
@@ -363,7 +363,7 @@ const LandingPage = () => {
             <Button 
               variant="secondary" 
               size="lg" 
-              icon={<ArrowRight className="w-5 h-5" />}
+              icon={ArrowRight}
               onClick={() => navigate('/login')}
               className="min-w-[200px] text-lg"
             >

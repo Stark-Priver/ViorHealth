@@ -232,7 +232,7 @@ const InventoryList = forwardRef(({ onAddItem, onEditItem }, ref) => {
           <h2 className="text-2xl font-bold text-neutral-800">Inventory Management</h2>
           <p className="text-sm text-neutral-600">Manage your pharmaceutical inventory</p>
         </div>
-        <Button icon={<Plus className="w-4 h-4" />} onClick={onAddItem}>
+        <Button icon={Plus} onClick={onAddItem}>
           Add New Item
         </Button>
       </div>
@@ -250,10 +250,10 @@ const InventoryList = forwardRef(({ onAddItem, onEditItem }, ref) => {
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
           </div>
-          <Button variant="outline" icon={<Filter className="w-4 h-4" />}>
+          <Button variant="outline" icon={Filter}>
             Filter
           </Button>
-          <Button variant="secondary" icon={<Download className="w-4 h-4" />}>
+          <Button variant="secondary" icon={Download}>
             Export
           </Button>
         </div>

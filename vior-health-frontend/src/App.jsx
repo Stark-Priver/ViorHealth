@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SidebarProvider } from './context/SidebarContext';
 import { useSidebar } from './hooks/useSidebar';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import TitleBar from './components/common/TitleBar';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
 import Breadcrumb from './components/common/Breadcrumb';
@@ -36,27 +37,30 @@ const MainLayout = ({ children }) => {
   
   return (
     <div className="min-h-screen bg-neutral-50 overflow-x-hidden">
-      <Navbar />
-      <div className="flex overflow-x-hidden">
-        <Sidebar />
-        <main 
-          className={`
-            flex-1 min-h-screen transition-all duration-300 overflow-x-hidden
-            ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
-          `}
-        >
-          <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
-            <Breadcrumb />
-            {children}
-          </div>
-        </main>
+      <TitleBar />
+      <div className="pt-8">
+        <Navbar />
+        <div className="flex overflow-x-hidden">
+          <Sidebar />
+          <main 
+            className={`
+              flex-1 min-h-screen transition-all duration-300 overflow-x-hidden
+              ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
+            `}
+          >
+            <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+              <Breadcrumb />
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );
 };
 
 // Home route component that redirects based on auth status
-const Home = () => {
+const HomeRoute = () => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 };
@@ -69,7 +73,7 @@ function App() {
           <div className="font-poppins">
             <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<HomeRoute />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/landing" element={<LandingPage />} />
 

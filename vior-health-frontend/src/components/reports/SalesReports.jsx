@@ -28,7 +28,7 @@ const SalesReports = () => {
           <h2 className="text-2xl font-bold text-neutral-800">Sales Reports</h2>
           <p className="text-sm text-neutral-600">Comprehensive sales analytics and insights</p>
         </div>
-        <Button variant="primary" icon={<Download className="w-4 h-4" />}>
+        <Button variant="primary" icon={Download}>
           Export Report
         </Button>
       </div>

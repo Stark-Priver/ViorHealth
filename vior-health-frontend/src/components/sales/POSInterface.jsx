@@ -345,7 +345,7 @@ const POSInterface = () => {
             variant="success"
             fullWidth
             className="mt-4"
-            icon={<DollarSign className="w-5 h-5" />}
+            icon={DollarSign}
             onClick={handleCheckout}
             disabled={cart.length === 0 || processing}
           >

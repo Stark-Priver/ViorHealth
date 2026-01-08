@@ -446,10 +446,10 @@ const InventoryForm = ({ onClose, onSubmit, editData = null }) => {
       </div>
 
       <div className="flex items-center gap-3 justify-end pt-4 border-t border-neutral-200">
-        <Button variant="secondary" icon={<X className="w-4 h-4" />} onClick={onClose} type="button" disabled={loading}>
+        <Button variant="secondary" icon={X} onClick={onClose} type="button" disabled={loading}>
           Cancel
         </Button>
-        <Button variant="primary" icon={<Save className="w-4 h-4" />} type="submit" disabled={loading}>
+        <Button variant="primary" icon={Save} type="submit" disabled={loading}>
           {loading ? 'Saving...' : editData ? 'Update Product' : 'Add Product'}
         </Button>
       </div>

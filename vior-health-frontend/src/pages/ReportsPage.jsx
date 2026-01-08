@@ -386,7 +386,7 @@ const ReportsPage = () => {
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>
           </select>
-          <Button variant="primary" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+          <Button variant="primary" icon={Download} onClick={handleExport}>
             Export Report
           </Button>
         </div>

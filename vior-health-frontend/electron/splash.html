@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ViorHealth - Loading...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      overflow: hidden;
+    }
+    
+    .splash-container {
+      text-align: center;
+      color: white;
+    }
+    
+    .logo {
+      font-size: 72px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .subtitle {
+      font-size: 24px;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+    
+    .loader {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    .status {
+      margin-top: 30px;
+      font-size: 16px;
+      opacity: 0.8;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .dots {
+      display: inline-block;
+      width: 30px;
+      text-align: left;
+    }
+    
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+    
+    .dots::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-container">
+    <div class="logo">ViorHealth</div>
+    <div class="subtitle">Healthcare Management System</div>
+    <div class="loader"></div>
+    <div class="status">
+      Starting application<span class="dots"></span>
+    </div>
+  </div>
+</body>
+</html>

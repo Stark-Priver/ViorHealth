@@ -7,7 +7,23 @@ let splashWindow;
 let backendProcess = null;
 
 const isDev = process.env.NODE_ENV === 'development';
-const FRONTEND_URL = isDev ? 'http://localhost:5173' : `file://${path.join(__dirname, '../dist/index.html')}`;
+
+// Get the correct paths for production
+function getResourcePath() {
+  if (isDev) {
+    return path.join(__dirname, '..');
+  }
+  // In production, resources are in the app.asar or app folder
+  return process.resourcesPath || app.getAppPath();
+}
+
+function getDistPath() {
+  if (isDev) {
+    return path.join(__dirname, '../dist');
+  }
+  // In production, dist is inside the asar file
+  return path.join(process.resourcesPath, 'app.asar', 'dist');
+}
 
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
@@ -60,14 +76,23 @@ async function createWindow() {
 
   // Load the frontend
   if (isDev) {
-    mainWindow.loadURL(FRONTEND_URL);
+    mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, '../dist/index.html');
+    const indexPath = path.join(getDistPath(), 'index.html');
     console.log('Loading production file from:', indexPath);
+    console.log('Resource path:', process.resourcesPath);
+    console.log('App path:', app.getAppPath());
+    
     mainWindow.loadFile(indexPath).catch(err => {
       console.error('Failed to load index.html:', err);
-      dialog.showErrorBox('Loading Error', `Failed to load application: ${err.message}`);
+      // Try alternative path
+      const altPath = path.join(__dirname, '../dist/index.html');
+      console.log('Trying alternative path:', altPath);
+      mainWindow.loadFile(altPath).catch(err2 => {
+        console.error('Alternative path also failed:', err2);
+        dialog.showErrorBox('Loading Error', `Failed to load application.\nTried paths:\n1. ${indexPath}\n2. ${altPath}\nError: ${err.message}`);
+      });
     });
   }
 
